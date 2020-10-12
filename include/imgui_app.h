@@ -463,6 +463,16 @@ namespace imgui_app
 
 namespace imgui_app
 {
+	bool select_platform(imgui_app_fw::platform p);
+	bool init();
+	bool pump();
+	void begin_frame();
+	void end_frame(ImVec4 clear_color);
+	void destroy();
+} // namespace imgui_app
+
+namespace imgui_app
+{
 	namespace details
 	{
 		struct logger

@@ -7,6 +7,41 @@
 
 #include <atomic_queue/atomic_queue.h>
 
+namespace imgui_app
+{
+	bool select_platform(imgui_app_fw::platform p)
+	{
+		return imgui_app_fw::select_platform(p);
+	}
+
+	bool init()
+	{
+		return imgui_app_fw::init();
+	}
+
+	bool pump()
+	{
+		return imgui_app_fw::pump();
+	}
+
+	void begin_frame()
+	{
+		imgui_app_fw::begin_frame();
+		;
+	}
+
+	void end_frame(ImVec4 clear_color)
+	{
+		imgui_app::logger()->draw();
+		imgui_app_fw::end_frame(clear_color);
+	}
+
+	void destroy()
+	{
+		imgui_app_fw::destroy();
+	}
+} // namespace imgui_app
+
 class ImGuiConsole_custom : public ImGuiConsole
 {
 public:
