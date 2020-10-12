@@ -1,4 +1,5 @@
 #include <imgui_app.h>
+#include <taskflow/taskflow.hpp>
 
 // Main code
 int main(int, char**)
@@ -16,6 +17,23 @@ int main(int, char**)
 			bool   show_demo_window = true;
 			ImVec4 clear_color		= ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+			tf::Executor executor;
+			tf::Taskflow taskflow;
+
+			auto [A, B, C, D] = taskflow.emplace(
+			[] () { imgui_app::info("TaskA"); },               //  task dependency graph
+			[] () { imgui_app::info("TaskB"); },               // 
+			[] () { imgui_app::info("TaskC"); },               //          +---+          
+			[] () { imgui_app::info("TaskD"); }                //    +---->| B |-----+   
+			);                                                 //    |     +---+     |
+																//  +---+           +-v-+ 
+			A.precede(B);  // A runs before B                  //  | A |           | D | 
+			A.precede(C);  // A runs before C                  //  +---+           +-^-+ 
+			B.precede(D);  // B runs before D                  //    |     +---+     |    
+			C.precede(D);  // C runs before D                  //    +---->| C |-----+    
+																//          +---+          
+			executor.run(taskflow).wait();
+			
 			while (imgui_app::pump())
 			{
 				imgui_app::begin_frame();

@@ -145,7 +145,6 @@ install(
     DIRECTORY ${cereal_SOURCE_DIR}/include/cereal
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
-
 ##
 
 CPMAddPackage(
@@ -160,6 +159,22 @@ endif()
 
 install(
     DIRECTORY ${entt_SOURCE_DIR}/src/entt
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
+	NAME taskflow
+	GITHUB_REPOSITORY taskflow/taskflow
+	GIT_TAG c75c05f3d549534e8bd05d6e9afdac82829ea786
+	DOWNLOAD_ONLY true)
+
+if( NOT ${taskflow_ADDED} )
+	message( FATAL_ERROR "Could not find taskflow" )
+endif()
+
+install(
+    DIRECTORY ${taskflow_SOURCE_DIR}/taskflow
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
 #############
@@ -184,6 +199,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
+		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
