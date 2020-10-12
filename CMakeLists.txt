@@ -41,38 +41,25 @@ endif()
 
 #############
 
-#CPMAddPackage(
-#	NAME stx
-#	GITHUB_REPOSITORY lamarrr/STX
-#	GIT_TAG a984c0fe9610548e880e775e279403bd8941d2eb 
-#	DOWNLOAD_ONLY true)
-#
-#if( NOT ${stx_ADDED} )
-#	message( FATAL_ERROR "Could not find imgui_addons.cpm" )
-#endif()
-#
-#file(GLOB STX_SRCS ${stx_SOURCE_DIR}/src/panic/hook.cc ${stx_SOURCE_DIR}/src/panic.cc)
-#file(GLOB STX_INCLUDES ${stx_SOURCE_DIR}/include/*.*)
-#
-#add_library(stx STATIC ${STX_SRCS})
-#
-#target_include_directories(stx PUBLIC $<BUILD_INTERFACE:${stx_SOURCE_DIR}/include>
-#                 $<INSTALL_INTERFACE:include>)
-#
-#packageProject(
-#  # the name of the target to export
-#  NAME stx
-#  # the version of the target to export
-#  VERSION ${PROJECT_VERSION}
-#  # a temporary directory to create the config files
-#  BINARY_DIR ${PROJECT_BINARY_DIR}
-#  # location of the target's public headers
-#  INCLUDE_DIR ${stx_SOURCE_DIR}/include
-#  # should match the target's INSTALL_INTERFACE include directory
-#  INCLUDE_DESTINATION include
-#  # semicolon separated list of the project's dependencies
-#  DEPENDENCIES "")
-#
+CPMAddPackage(
+	NAME stx
+	GITHUB_REPOSITORY lamarrr/STX
+	GIT_TAG a984c0fe9610548e880e775e279403bd8941d2eb
+	DOWNLOAD_ONLY true)
+
+if( NOT ${stx_ADDED} )
+	message( FATAL_ERROR "Could not find stx" )
+endif()
+
+file(GLOB stx_source 
+	${stx_SOURCE_DIR}/src/panic/hook.cc 
+	${stx_SOURCE_DIR}/src/panic.cc)
+
+install(
+    DIRECTORY ${stx_SOURCE_DIR}/include/stx
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
 
 CPMAddPackage(
 NAME atomic_queue
@@ -130,7 +117,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -144,6 +131,7 @@ target_include_directories(imgui_app
 	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${reckless_SOURCE_DIR}/reckless/include>
 		   $<BUILD_INTERFACE:${atomic_queue_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${stx_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
