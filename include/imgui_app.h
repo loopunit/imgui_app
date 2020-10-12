@@ -469,22 +469,9 @@ namespace imgui_app
 	void begin_frame();
 	void end_frame(ImVec4 clear_color);
 	void destroy();
-} // namespace imgui_app
 
-namespace imgui_app
-{
-	namespace details
-	{
-		struct logger
-		{
-			virtual ~logger()								= default;
-			virtual void log(const char* text) noexcept		= 0;
-			virtual void warning(const char* text) noexcept = 0;
-			virtual void error(const char* text) noexcept	= 0;
-			virtual void info(const char* text) noexcept	= 0;
-			virtual void draw() noexcept					= 0;
-		};
-	} // namespace details
-
-	using logger = virtual_singleton<details::logger>;
+	void log(const char* text) noexcept;
+	void warning(const char* text) noexcept;
+	void error(const char* text) noexcept;
+	void info(const char* text) noexcept;
 } // namespace imgui_app

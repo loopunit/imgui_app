@@ -7,11 +7,11 @@ int main(int, char**)
 	{
 		if (imgui_app::init())
 		{
-			imgui_app::logger()->info("Welcome to the imgui-console example!");
-			imgui_app::logger()->info("The following variables have been exposed to the console:");
-			imgui_app::logger()->info("\tbackground_color - set: [int int int int]");
-			imgui_app::logger()->info("Try running the following command:");
-			imgui_app::logger()->error("\tset background_color [255 0 0 255]");
+			imgui_app::info("Welcome to the imgui-console example!");
+			imgui_app::info("The following variables have been exposed to the console:");
+			imgui_app::info("\tbackground_color - set: [int int int int]");
+			imgui_app::info("Try running the following command:");
+			imgui_app::error("\tset background_color [255 0 0 255]");
 
 			bool   show_demo_window = true;
 			ImVec4 clear_color		= ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
