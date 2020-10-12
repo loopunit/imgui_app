@@ -75,6 +75,22 @@ endif()
 #
 
 CPMAddPackage(
+NAME atomic_queue
+	GITHUB_REPOSITORY max0x7ba/atomic_queue
+	GIT_TAG df794032353a9fbf6204481bdd53ef0263ce51f3 
+	DOWNLOAD_ONLY true)
+
+if( NOT ${atomic_queue_ADDED} )
+	message( FATAL_ERROR "Could not find atomic_queue" )
+endif()
+
+install(
+    DIRECTORY ${atomic_queue_SOURCE_DIR}/include/atomic_queue
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
 	NAME reckless
 	GITHUB_REPOSITORY mattiasflodin/reckless
 	GIT_TAG 5ac98bd799a44aef9b89fbfae509b044a4d1032b 
@@ -127,6 +143,7 @@ endif()
 target_include_directories(imgui_app 
 	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${reckless_SOURCE_DIR}/reckless/include>
+		   $<BUILD_INTERFACE:${atomic_queue_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
