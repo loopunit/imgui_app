@@ -129,6 +129,22 @@ install(
     DIRECTORY ${nlohmann_json_SOURCE_DIR}/include/nlohmann
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
+##
+
+CPMAddPackage(
+	NAME cereal
+	GITHUB_REPOSITORY USCiLab/cereal
+	GIT_TAG 3e4d1b84cab4891368d2179a61a7ba06a5693e7f
+	DOWNLOAD_ONLY true)
+
+if( NOT ${cereal_ADDED} )
+	message( FATAL_ERROR "Could not find cereal" )
+endif()
+
+install(
+    DIRECTORY ${cereal_SOURCE_DIR}/include/cereal
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
 #############
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
@@ -149,6 +165,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${atomic_queue_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${stx_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
