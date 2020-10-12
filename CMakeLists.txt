@@ -145,6 +145,23 @@ install(
     DIRECTORY ${cereal_SOURCE_DIR}/include/cereal
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
+
+##
+
+CPMAddPackage(
+	NAME entt
+	GITHUB_REPOSITORY skypjack/entt
+	GIT_TAG cf395f707a1db97fb9a2a5e49a6d0114ec8fedec
+	DOWNLOAD_ONLY true)
+
+if( NOT ${entt_ADDED} )
+	message( FATAL_ERROR "Could not find entt" )
+endif()
+
+install(
+    DIRECTORY ${entt_SOURCE_DIR}/src/entt
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
 #############
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
@@ -166,6 +183,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${stx_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
