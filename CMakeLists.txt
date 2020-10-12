@@ -113,6 +113,22 @@ install(
     DIRECTORY ${reckless_SOURCE_DIR}/reckless/include/reckless
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
+##
+
+CPMAddPackage(
+	NAME nlohmann_json
+	GITHUB_REPOSITORY nlohmann/json
+	GIT_TAG fd7a9f600712b2724463e9f7f703878ade676d6e
+	DOWNLOAD_ONLY true)
+
+if( NOT ${nlohmann_json_ADDED} )
+	message( FATAL_ERROR "Could not find nlohmann_json" )
+endif()
+
+install(
+    DIRECTORY ${nlohmann_json_SOURCE_DIR}/include/nlohmann
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
 #############
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
@@ -132,6 +148,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${reckless_SOURCE_DIR}/reckless/include>
 		   $<BUILD_INTERFACE:${atomic_queue_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${stx_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
