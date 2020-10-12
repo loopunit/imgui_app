@@ -1,11 +1,20 @@
 #include <imgui_app.h>
 #include <taskflow/taskflow.hpp>
+#include <optick.h>
 
 // Main code
 int main(int, char**)
 {
 	if (imgui_app::select_platform(imgui_app_fw::platform::win32_dx12))
 	{
+		OPTICK_APP("ConsoleApp");
+
+		OPTICK_SET_MEMORY_ALLOCATOR(
+			[](size_t size) -> void* { return operator new(size); }, 
+			[](void* p) { operator delete(p); }, 
+			[]() { /* Do some TLS initialization here if needed */ }
+		);
+
 		if (imgui_app::init())
 		{
 			imgui_app::info("Welcome to the imgui-console example!");
@@ -36,6 +45,7 @@ int main(int, char**)
 			
 			while (imgui_app::pump())
 			{
+				OPTICK_FRAME("MainThread");
 				imgui_app::begin_frame();
 
 				if (show_demo_window)
@@ -48,6 +58,7 @@ int main(int, char**)
 
 			imgui_app::destroy();
 		}
+		OPTICK_SHUTDOWN();
 	}
 
 	return 0;

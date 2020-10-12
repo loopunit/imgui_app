@@ -179,9 +179,27 @@ install(
 
 #############
 
+CPMAddPackage(
+	NAME optick
+	GITHUB_REPOSITORY bombomby/optick
+	GIT_TAG 7b940feedebd0dcd8ee6448f7997044a1e535693
+	DOWNLOAD_ONLY true)
+
+if( NOT ${optick_ADDED} )
+	message( FATAL_ERROR "Could not find optick" )
+endif()
+
+file(GLOB optick_source ${optick_SOURCE_DIR}/src/*.*)
+
+install(
+    FILES ${optick_SOURCE_DIR}/src/optick.h ${optick_SOURCE_DIR}/src/optick.config.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+#############
+
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source} ${optick_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -200,9 +218,16 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
+		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
+
+target_compile_definitions(imgui_app PUBLIC 
+	USE_OPTICK=1
+	OPTICK_ENABLE_TRACING=1
+	OPTICK_ENABLE_GPU_D3D12=0	
+	OPTICK_ENABLE_GPU_VULKAN=0)
 
 packageProject(
   # the name of the target to export
