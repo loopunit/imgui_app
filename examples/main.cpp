@@ -1,10 +1,17 @@
 #include <imgui_app.h>
 #include <taskflow/taskflow.hpp>
 #include <optick.h>
+#include <leveldb/db.h>
 
 // Main code
 int main(int, char**)
 {
+	leveldb::DB* db;
+	leveldb::Options options;
+	options.create_if_missing = true;
+	leveldb::Status status = leveldb::DB::Open(options, "test.db", &db);
+	delete db;
+
 	if (imgui_app::select_platform(imgui_app_fw::platform::win32_dx12))
 	{
 		OPTICK_APP("ConsoleApp");

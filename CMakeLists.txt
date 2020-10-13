@@ -177,6 +177,22 @@ install(
     DIRECTORY ${taskflow_SOURCE_DIR}/taskflow
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
+##
+
+CPMAddPackage(
+	NAME argh
+	GITHUB_REPOSITORY adishavit/argh
+	GIT_TAG d9964d4fae6ce6dec9d52fa5c86d648fff4d4026
+	DOWNLOAD_ONLY true)
+
+if( NOT ${argh_ADDED} )
+	message( FATAL_ERROR "Could not find argh" )
+endif()
+
+install(
+    FILES ${argh_SOURCE_DIR}/argh.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
 #############
 
 CPMAddPackage(
@@ -197,16 +213,229 @@ install(
 
 #############
 
+CPMAddPackage(
+	NAME libuv
+	GITHUB_REPOSITORY libuv/libuv
+	GIT_TAG 30ff5bf2161257921f3a3ce5655804f7cb282aa9
+	DOWNLOAD_ONLY true)
+
+if( NOT ${libuv_ADDED} )
+	message( FATAL_ERROR "Could not find libuv" )
+endif()
+
+file(GLOB uv_source
+    ${libuv_SOURCE_DIR}/src/fs-poll.c
+    ${libuv_SOURCE_DIR}/src/idna.c
+    ${libuv_SOURCE_DIR}/src/inet.c
+    ${libuv_SOURCE_DIR}/src/random.c
+    ${libuv_SOURCE_DIR}/src/strscpy.c
+    ${libuv_SOURCE_DIR}/src/threadpool.c
+    ${libuv_SOURCE_DIR}/src/timer.c
+    ${libuv_SOURCE_DIR}/src/uv-common.c
+    ${libuv_SOURCE_DIR}/src/uv-data-getter-setters.c
+    ${libuv_SOURCE_DIR}/src/version.c)
+
+if(WIN32)
+	#list(APPEND uv_platform_defines WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0600)
+	
+	list(APPEND uv_platform_libraries
+		psapi
+		user32
+		advapi32
+		iphlpapi
+		userenv
+		ws2_32)
+
+	file(GLOB uv_platform_source
+		${libuv_SOURCE_DIR}/src/win/async.c
+		${libuv_SOURCE_DIR}/src/win/core.c
+		${libuv_SOURCE_DIR}/src/win/detect-wakeup.c
+		${libuv_SOURCE_DIR}/src/win/dl.c
+		${libuv_SOURCE_DIR}/src/win/error.c
+		${libuv_SOURCE_DIR}/src/win/fs.c
+		${libuv_SOURCE_DIR}/src/win/fs-event.c
+		${libuv_SOURCE_DIR}/src/win/getaddrinfo.c
+		${libuv_SOURCE_DIR}/src/win/getnameinfo.c
+		${libuv_SOURCE_DIR}/src/win/handle.c
+		${libuv_SOURCE_DIR}/src/win/loop-watcher.c
+		${libuv_SOURCE_DIR}/src/win/pipe.c
+		${libuv_SOURCE_DIR}/src/win/thread.c
+		${libuv_SOURCE_DIR}/src/win/poll.c
+		${libuv_SOURCE_DIR}/src/win/process.c
+		${libuv_SOURCE_DIR}/src/win/process-stdio.c
+		${libuv_SOURCE_DIR}/src/win/signal.c
+		${libuv_SOURCE_DIR}/src/win/snprintf.c
+		${libuv_SOURCE_DIR}/src/win/stream.c
+		${libuv_SOURCE_DIR}/src/win/tcp.c
+		${libuv_SOURCE_DIR}/src/win/tty.c
+		${libuv_SOURCE_DIR}/src/win/udp.c
+		${libuv_SOURCE_DIR}/src/win/util.c
+		${libuv_SOURCE_DIR}/src/win/winapi.c
+		${libuv_SOURCE_DIR}/src/win/winsock.c)
+else()
+	#list(APPEND uv_platform_defines _FILE_OFFSET_BITS=64 _LARGEFILE_SOURCE)
+
+	file(GLOB uv_platform_source
+		   ${libuv_SOURCE_DIR}/src/unix/async.c
+		   ${libuv_SOURCE_DIR}/src/unix/core.c
+		   ${libuv_SOURCE_DIR}/src/unix/dl.c
+		   ${libuv_SOURCE_DIR}/src/unix/fs.c
+		   ${libuv_SOURCE_DIR}/src/unix/getaddrinfo.c
+		   ${libuv_SOURCE_DIR}/src/unix/getnameinfo.c
+		   ${libuv_SOURCE_DIR}/src/unix/loop-watcher.c
+		   ${libuv_SOURCE_DIR}/src/unix/loop.c
+		   ${libuv_SOURCE_DIR}/src/unix/pipe.c
+		   ${libuv_SOURCE_DIR}/src/unix/poll.c
+		   ${libuv_SOURCE_DIR}/src/unix/process.c
+		   ${libuv_SOURCE_DIR}/src/unix/random-devurandom.c
+		   ${libuv_SOURCE_DIR}/src/unix/signal.c
+		   ${libuv_SOURCE_DIR}/src/unix/stream.c
+		   ${libuv_SOURCE_DIR}/src/unix/tcp.c
+		   ${libuv_SOURCE_DIR}/src/unix/thread.c
+		   ${libuv_SOURCE_DIR}/src/unix/tty.c
+		   ${libuv_SOURCE_DIR}/src/unix/udp.c)	   
+endif()
+
+install(
+    FILES ${libuv_SOURCE_DIR}/include/uv.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+install(
+    DIRECTORY ${libuv_SOURCE_DIR}/include/uv
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+#############
+
+CPMAddPackage(
+	NAME leveldb
+	GITHUB_REPOSITORY google/leveldb
+	GIT_TAG b7d302326961fb809d92a95ce813e2d26fe2e16e
+	DOWNLOAD_ONLY true)
+
+if( NOT ${leveldb_ADDED} )
+	message( FATAL_ERROR "Could not find leveldb" )
+endif()
+
+set(LEVELDB_PUBLIC_INCLUDE_DIR "include/leveldb")
+set(LEVELDB_PORT_CONFIG_DIR "include/port")
+
+set(HAVE_FDATASYNC OFF)
+set(HAVE_FULLFSYNC OFF)
+set(HAVE_O_CLOEXEC OFF)
+set(HAVE_CRC32C OFF)
+set(HAVE_SNAPPY OFF)
+
+configure_file(
+  "${leveldb_SOURCE_DIR}/port/port_config.h.in"
+  "${PROJECT_BINARY_DIR}/include/port/port_config.h"
+)
+
+if (WIN32)
+  set(LEVELDB_PLATFORM_NAME LEVELDB_PLATFORM_WINDOWS)
+else()
+  set(LEVELDB_PLATFORM_NAME LEVELDB_PLATFORM_POSIX)
+endif()
+
+file(GLOB leveldb_source
+    ${leveldb_SOURCE_DIR}/db/builder.cc
+    ${leveldb_SOURCE_DIR}/db/builder.h
+    ${leveldb_SOURCE_DIR}/db/c.cc
+    ${leveldb_SOURCE_DIR}/db/db_impl.cc
+    ${leveldb_SOURCE_DIR}/db/db_impl.h
+    ${leveldb_SOURCE_DIR}/db/db_iter.cc
+    ${leveldb_SOURCE_DIR}/db/db_iter.h
+    ${leveldb_SOURCE_DIR}/db/dbformat.cc
+    ${leveldb_SOURCE_DIR}/db/dbformat.h
+    ${leveldb_SOURCE_DIR}/db/dumpfile.cc
+    ${leveldb_SOURCE_DIR}/db/filename.cc
+    ${leveldb_SOURCE_DIR}/db/filename.h
+    ${leveldb_SOURCE_DIR}/db/log_format.h
+    ${leveldb_SOURCE_DIR}/db/log_reader.cc
+    ${leveldb_SOURCE_DIR}/db/log_reader.h
+    ${leveldb_SOURCE_DIR}/db/log_writer.cc
+    ${leveldb_SOURCE_DIR}/db/log_writer.h
+    ${leveldb_SOURCE_DIR}/db/memtable.cc
+    ${leveldb_SOURCE_DIR}/db/memtable.h
+    ${leveldb_SOURCE_DIR}/db/repair.cc
+    ${leveldb_SOURCE_DIR}/db/skiplist.h
+    ${leveldb_SOURCE_DIR}/db/snapshot.h
+    ${leveldb_SOURCE_DIR}/db/table_cache.cc
+    ${leveldb_SOURCE_DIR}/db/table_cache.h
+    ${leveldb_SOURCE_DIR}/db/version_edit.cc
+    ${leveldb_SOURCE_DIR}/db/version_edit.h
+    ${leveldb_SOURCE_DIR}/db/version_set.cc
+    ${leveldb_SOURCE_DIR}/db/version_set.h
+    ${leveldb_SOURCE_DIR}/db/write_batch_internal.h
+    ${leveldb_SOURCE_DIR}/db/write_batch.cc
+    ${leveldb_SOURCE_DIR}/port/port_stdcxx.h
+    ${leveldb_SOURCE_DIR}/port/port.h
+    ${leveldb_SOURCE_DIR}/port/thread_annotations.h
+    ${leveldb_SOURCE_DIR}/table/block_builder.cc
+    ${leveldb_SOURCE_DIR}/table/block_builder.h
+    ${leveldb_SOURCE_DIR}/table/block.cc
+    ${leveldb_SOURCE_DIR}/table/block.h
+    ${leveldb_SOURCE_DIR}/table/filter_block.cc
+    ${leveldb_SOURCE_DIR}/table/filter_block.h
+    ${leveldb_SOURCE_DIR}/table/format.cc
+    ${leveldb_SOURCE_DIR}/table/format.h
+    ${leveldb_SOURCE_DIR}/table/iterator_wrapper.h
+    ${leveldb_SOURCE_DIR}/table/iterator.cc
+    ${leveldb_SOURCE_DIR}/table/merger.cc
+    ${leveldb_SOURCE_DIR}/table/merger.h
+    ${leveldb_SOURCE_DIR}/table/table_builder.cc
+    ${leveldb_SOURCE_DIR}/table/table.cc
+    ${leveldb_SOURCE_DIR}/table/two_level_iterator.cc
+    ${leveldb_SOURCE_DIR}/table/two_level_iterator.h
+    ${leveldb_SOURCE_DIR}/util/arena.cc
+    ${leveldb_SOURCE_DIR}/util/arena.h
+    ${leveldb_SOURCE_DIR}/util/bloom.cc
+    ${leveldb_SOURCE_DIR}/util/cache.cc
+    ${leveldb_SOURCE_DIR}/util/coding.cc
+    ${leveldb_SOURCE_DIR}/util/coding.h
+    ${leveldb_SOURCE_DIR}/util/comparator.cc
+    ${leveldb_SOURCE_DIR}/util/crc32c.cc
+    ${leveldb_SOURCE_DIR}/util/crc32c.h
+    ${leveldb_SOURCE_DIR}/util/env.cc
+    ${leveldb_SOURCE_DIR}/util/filter_policy.cc
+    ${leveldb_SOURCE_DIR}/util/hash.cc
+    ${leveldb_SOURCE_DIR}/util/hash.h
+    ${leveldb_SOURCE_DIR}/util/logging.cc
+    ${leveldb_SOURCE_DIR}/util/logging.h
+    ${leveldb_SOURCE_DIR}/util/mutexlock.h
+    ${leveldb_SOURCE_DIR}/util/no_destructor.h
+    ${leveldb_SOURCE_DIR}/util/options.cc
+    ${leveldb_SOURCE_DIR}/util/random.h
+    ${leveldb_SOURCE_DIR}/util/status.cc
+	${leveldb_SOURCE_DIR}/helpers/memenv/memenv.cc
+	${leveldb_SOURCE_DIR}/helpers/memenv/memenv.h
+	)
+
+if(WIN32)
+	file(GLOB leveldb_platform_source
+	    ${leveldb_SOURCE_DIR}/util/env_windows.cc
+		${leveldb_SOURCE_DIR}/util/windows_logger.h)
+else()
+	file(GLOB leveldb_platform_source
+      ${leveldb_SOURCE_DIR}/util/env_posix.cc
+      ${leveldb_SOURCE_DIR}/util/posix_logger.h)
+endif()
+
+install(
+    DIRECTORY ${leveldb_SOURCE_DIR}/include/leveldb
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+#############
+
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source} ${optick_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
 
 add_library(imgui_app STATIC ${sources})
 
 target_link_libraries(imgui_app PUBLIC imgui_app_fw imgui_addons)
 
 if(WIN32)
-	target_link_libraries(imgui_app PUBLIC Synchronization)
+	target_link_libraries(imgui_app PUBLIC Synchronization ${uv_platform_libraries})
 endif()
 
 target_include_directories(imgui_app 
@@ -219,15 +448,24 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
-           $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>)
+		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>
+	PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+			$<BUILD_INTERFACE:${libuv_SOURCE_DIR}/src>
+			$<BUILD_INTERFACE:${leveldb_SOURCE_DIR}>)
 
 set_target_properties(imgui_app PROPERTIES CXX_STANDARD 17)
 
-target_compile_definitions(imgui_app PUBLIC 
-	USE_OPTICK=1
-	OPTICK_ENABLE_TRACING=1
-	OPTICK_ENABLE_GPU_D3D12=0	
-	OPTICK_ENABLE_GPU_VULKAN=0)
+target_compile_definitions(imgui_app 
+	PUBLIC 
+		USE_OPTICK=1
+		OPTICK_ENABLE_TRACING=1
+		OPTICK_ENABLE_GPU_D3D12=0	
+		OPTICK_ENABLE_GPU_VULKAN=0
+	PRIVATE
+		LEVELDB_COMPILE_LIBRARY
+		${LEVELDB_PLATFORM_NAME}=1)
 
 packageProject(
   # the name of the target to export
