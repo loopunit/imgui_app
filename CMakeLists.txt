@@ -263,6 +263,54 @@ install(
     FILES ${argh_SOURCE_DIR}/argh.h
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
+##
+
+CPMAddPackage(
+	NAME hedley
+	GITHUB_REPOSITORY nemequ/hedley
+	GIT_TAG 4a59eb6d8e3e73b6c60aed2c92a6590d26df93d8
+	DOWNLOAD_ONLY true)
+
+if( NOT ${hedley_ADDED} )
+	message( FATAL_ERROR "Could not find hedley" )
+endif()
+
+install(
+    FILES ${hedley_SOURCE_DIR}/hedley.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
+	NAME rtm
+	GITHUB_REPOSITORY nfrechette/rtm
+	GIT_TAG 60e61b4fa37b01817e931164a30b21150b260354
+	DOWNLOAD_ONLY true)
+
+if( NOT ${rtm_ADDED} )
+	message( FATAL_ERROR "Could not find rtm" )
+endif()
+
+install(
+    DIRECTORY ${rtm_SOURCE_DIR}/includes/rtm
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
+	NAME plf_nanotimer
+	GITHUB_REPOSITORY mattreecebentley/plf_nanotimer
+	GIT_TAG bc8b44d2befc4395f63701c923ece89835d8415c
+	DOWNLOAD_ONLY true)
+
+if( NOT ${plf_nanotimer_ADDED} )
+	message( FATAL_ERROR "Could not find plf_nanotimer" )
+endif()
+
+install(
+    FILES ${plf_nanotimer_SOURCE_DIR}/plf_nanotimer.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
 #############
 
 CPMAddPackage(
@@ -279,6 +327,24 @@ file(GLOB optick_source ${optick_SOURCE_DIR}/src/*.*)
 
 install(
     FILES ${optick_SOURCE_DIR}/src/optick.h ${optick_SOURCE_DIR}/src/optick.config.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+#############
+
+CPMAddPackage(
+	NAME mustach
+	GIT_REPOSITORY https://gitlab.com/jobol/mustach.git
+	GIT_TAG dc2a8a4f331258be8526044edae6ab95bf803353
+	DOWNLOAD_ONLY true)
+
+if( NOT ${mustach_ADDED} )
+	message( FATAL_ERROR "Could not find mustach" )
+endif()
+
+file(GLOB mustach_source ${mustach_SOURCE_DIR}/mustach.c)
+
+install(
+    FILES ${mustach_SOURCE_DIR}/mustach.h
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
 #############
@@ -498,7 +564,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -517,9 +583,14 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
-		   $<BUILD_INTERFACE:${gsl_SOURCE_DIR}>/include
-		   $<BUILD_INTERFACE:${units_SOURCE_DIR}>/include
+		   $<BUILD_INTERFACE:${gsl_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${units_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${argh_SOURCE_DIR}>
+		   $<BUILD_INTERFACE:${hedley_SOURCE_DIR}>
+		   $<BUILD_INTERFACE:${rtm_SOURCE_DIR}/includes>
+		   $<BUILD_INTERFACE:${plf_nanotimer_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
+		   $<BUILD_INTERFACE:${mustach_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${cwalk_SOURCE_DIR}/include>
