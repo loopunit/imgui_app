@@ -218,6 +218,22 @@ install(
 ##
 
 CPMAddPackage(
+	NAME gsl
+	GITHUB_REPOSITORY microsoft/GSL
+	GIT_TAG bd23bdc0adae7028365cbbe934f88cbf436da7ee
+	DOWNLOAD_ONLY true)
+
+if( NOT ${gsl_ADDED} )
+	message( FATAL_ERROR "Could not find gsl" )
+endif()
+
+install(
+    DIRECTORY ${gsl_SOURCE_DIR}/gsl
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
 	NAME argh
 	GITHUB_REPOSITORY adishavit/argh
 	GIT_TAG d9964d4fae6ce6dec9d52fa5c86d648fff4d4026
@@ -485,6 +501,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
+		   $<BUILD_INTERFACE:${gsl_SOURCE_DIR}>/include
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
