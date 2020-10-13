@@ -235,6 +235,11 @@ namespace imgui_app
 		return imgui_app_fw::select_platform(p);
 	}
 
+	void set_window_title(const char* title) 
+	{
+		return imgui_app_fw::set_window_title(title);
+	}
+
 	bool init()
 	{
 		if (imgui_app_fw::init())

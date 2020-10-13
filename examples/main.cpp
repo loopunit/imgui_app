@@ -40,6 +40,7 @@ int main(int, char**)
 
 	if (imgui_app::select_platform(imgui_app_fw::platform::win32_dx12))
 	{
+
 		OPTICK_APP("ConsoleApp");
 
 		OPTICK_SET_MEMORY_ALLOCATOR(
@@ -50,6 +51,8 @@ int main(int, char**)
 
 		if (imgui_app::init())
 		{
+			imgui_app::set_window_title("Hello?");
+			
 			imgui_app::info("Welcome to the imgui-console example!");
 			imgui_app::info("The following variables have been exposed to the console:");
 			imgui_app::info("\tbackground_color - set: [int int int int]");
