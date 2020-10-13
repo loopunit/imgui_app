@@ -183,6 +183,25 @@ file(GLOB cwalk_source
 ##
 
 CPMAddPackage(
+	NAME fmt
+	GITHUB_REPOSITORY fmtlib/fmt
+	GIT_TAG af283059612dd06c321dc509255ae9b003ca5e69
+	DOWNLOAD_ONLY true)
+
+if( NOT ${fmt_ADDED} )
+	message( FATAL_ERROR "Could not find fmt" )
+endif()
+
+install(
+    DIRECTORY ${fmt_SOURCE_DIR}/include/fmt
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+file(GLOB fmt_source 
+	${fmt_SOURCE_DIR}/src/*.cc)
+
+##
+
+CPMAddPackage(
 	NAME taskflow
 	GITHUB_REPOSITORY taskflow/taskflow
 	GIT_TAG c75c05f3d549534e8bd05d6e9afdac82829ea786
@@ -447,7 +466,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -470,7 +489,9 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${cwalk_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${fmt_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>
+
 	PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 			$<BUILD_INTERFACE:${libuv_SOURCE_DIR}/src>
 			$<BUILD_INTERFACE:${leveldb_SOURCE_DIR}>)
