@@ -228,7 +228,23 @@ if( NOT ${gsl_ADDED} )
 endif()
 
 install(
-    DIRECTORY ${gsl_SOURCE_DIR}/gsl
+    DIRECTORY ${gsl_SOURCE_DIR}/include/gsl
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
+	NAME units
+	GITHUB_REPOSITORY nholthaus/units
+	GIT_TAG ea6d126942cb3225a341568ab57ec52513977875
+	DOWNLOAD_ONLY true)
+
+if( NOT ${units_ADDED} )
+	message( FATAL_ERROR "Could not find units" )
+endif()
+
+install(
+    FILES ${units_SOURCE_DIR}/include/units.h
     DESTINATION include/imgui_app-${PROJECT_VERSION})
 
 ##
@@ -502,6 +518,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${entt_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${taskflow_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${gsl_SOURCE_DIR}>/include
+		   $<BUILD_INTERFACE:${units_SOURCE_DIR}>/include
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
