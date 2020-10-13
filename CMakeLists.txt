@@ -164,6 +164,25 @@ install(
 ##
 
 CPMAddPackage(
+	NAME cwalk
+	GITHUB_REPOSITORY likle/cwalk
+	GIT_TAG 30da9d275b0ca4e9ef5307521ee452d8b85015e4
+	DOWNLOAD_ONLY true)
+
+if( NOT ${cwalk_ADDED} )
+	message( FATAL_ERROR "Could not find cwalk" )
+endif()
+
+install(
+    FILES ${cwalk_SOURCE_DIR}/include/cwalk.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+file(GLOB cwalk_source 
+	${cwalk_SOURCE_DIR}/src/cwalk.c)
+
+##
+
+CPMAddPackage(
 	NAME taskflow
 	GITHUB_REPOSITORY taskflow/taskflow
 	GIT_TAG c75c05f3d549534e8bd05d6e9afdac82829ea786
@@ -428,7 +447,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${stx_source} ${optick_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -450,6 +469,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${libuv_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${cwalk_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>
 	PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 			$<BUILD_INTERFACE:${libuv_SOURCE_DIR}/src>

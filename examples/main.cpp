@@ -2,10 +2,36 @@
 #include <taskflow/taskflow.hpp>
 #include <optick.h>
 #include <leveldb/db.h>
+#include <cwalk.h>
+
+void relative_check()
+{
+  const char *relative_paths[] = {"..", "test", "test/test", "../another_test",
+    "./simple", ".././simple"};
+  const char *absolute_paths[] = {"/", "/test", "/../test/", "/../another_test",
+    "/./simple", "/.././simple"};
+  size_t i;
+
+  cwk_path_set_style(CWK_STYLE_UNIX);
+
+  for (i = 0; i < sizeof(relative_paths) / sizeof(relative_paths[0]); ++i) {
+    if (!cwk_path_is_relative(relative_paths[i])) {
+      return;
+    }
+  }
+
+  for (i = 0; i < sizeof(absolute_paths) / sizeof(absolute_paths[0]); ++i) {
+    if (cwk_path_is_relative(absolute_paths[i])) {
+      return;
+    }
+  }
+}
 
 // Main code
 int main(int, char**)
 {
+	relative_check();
+
 	leveldb::DB* db;
 	leveldb::Options options;
 	options.create_if_missing = true;
