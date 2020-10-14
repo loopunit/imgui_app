@@ -298,6 +298,28 @@ install(
 ##
 
 CPMAddPackage(
+	NAME nfd
+	GITHUB_REPOSITORY native-toolkit/nfd
+	GIT_TAG e9e3636b031797396aa502b78432ae1347c2afe3
+	DOWNLOAD_ONLY true)
+
+if( NOT ${nfd_ADDED} )
+	message( FATAL_ERROR "Could not find nfd" )
+endif()
+
+install(
+    FILES ${nfd_SOURCE_DIR}/src/include/nfd.h
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+file(GLOB nfd_source 
+	${nfd_SOURCE_DIR}/src/nfd_win.cpp
+	${nfd_SOURCE_DIR}/src/common.h
+	${nfd_SOURCE_DIR}/src/nfd_common.h
+	${nfd_SOURCE_DIR}/src/nfd_common.c)
+
+##
+
+CPMAddPackage(
 	NAME plf_nanotimer
 	GITHUB_REPOSITORY mattreecebentley/plf_nanotimer
 	GIT_TAG bc8b44d2befc4395f63701c923ece89835d8415c
@@ -564,7 +586,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source} ${nfd_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -595,6 +617,8 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${leveldb_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${cwalk_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${fmt_SOURCE_DIR}/include>
+		   $<BUILD_INTERFACE:${nfd_SOURCE_DIR}/src>
+		   $<BUILD_INTERFACE:${nfd_SOURCE_DIR}/src/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>
 
 	PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>

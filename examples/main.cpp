@@ -71,12 +71,12 @@ int main(int, char**)
 			[] () { imgui_app::info("TaskC"); },               //          +---+          
 			[] () { imgui_app::info("TaskD"); }                //    +---->| B |-----+   
 			);                                                 //    |     +---+     |
-																//  +---+           +-v-+ 
+															   //  +---+           +-v-+ 
 			A.precede(B);  // A runs before B                  //  | A |           | D | 
 			A.precede(C);  // A runs before C                  //  +---+           +-^-+ 
 			B.precede(D);  // B runs before D                  //    |     +---+     |    
 			C.precede(D);  // C runs before D                  //    +---->| C |-----+    
-																//          +---+          
+															   //          +---+          
 			executor.run(taskflow).wait();
 			
 			while (imgui_app::pump())
