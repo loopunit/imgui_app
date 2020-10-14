@@ -8,6 +8,138 @@
 
 #include <atomic_queue/atomic_queue.h>
 
+#include <nfd.h>
+
+namespace imgui_app
+{
+	namespace details
+	{
+		// indirect call required to copy the string views
+		static std::optional<std::string> async_file_open_dialog(std::string filter, std::string loc)
+		{
+			std::string result;
+			char*		nfd_path = nullptr;
+
+			auto nfd_result = NFD_OpenDialog(filter.data(), loc.data(), &nfd_path);
+			if (nfd_result == NFD_OKAY)
+			{
+				result = nfd_path;
+				::free(nfd_path);
+				return result;
+			}
+			else if (nfd_result == NFD_CANCEL)
+			{
+				// nothing
+			}
+			else
+			{
+				// printf("Error: %s\n", NFD_GetError());
+			}
+			return std::nullopt;
+		}
+
+		static std::optional<std::vector<std::string>> async_file_open_multiple_dialog(std::string filter, std::string loc)
+		{
+			std::vector<std::string> results;
+			nfdpathset_t			 path_set;
+
+			auto nfd_result = NFD_OpenDialogMultiple(filter.data(), loc.data(), &path_set);
+
+			if (nfd_result == NFD_OKAY)
+			{
+				const auto num_paths = NFD_PathSet_GetCount(&path_set);
+				results.resize(num_paths);
+				for (auto i = num_paths - 1; i >= 0; --i)
+				{
+					results[i] = NFD_PathSet_GetPath(&path_set, i);
+				}
+
+				NFD_PathSet_Free(&path_set);
+
+				return results;
+			}
+			else if (nfd_result == NFD_CANCEL)
+			{
+				// nothing
+			}
+			else
+			{
+				//::imgui_app::error("%s", NFD_GetError());
+				// printf("Error: );
+			}
+			return std::nullopt;
+		}
+
+		static std::optional<std::string> async_file_save_dialog(std::string filter, std::string loc)
+		{
+			std::string result;
+			nfdchar_t*	nfd_path = nullptr;
+
+			auto nfd_result = NFD_SaveDialog(filter.data(), loc.data(), &nfd_path);
+
+			if (nfd_result == NFD_OKAY)
+			{
+				result = nfd_path;
+				::free(nfd_path);
+				return result;
+			}
+			else if (nfd_result == NFD_CANCEL)
+			{
+				// nothing
+			}
+			else
+			{
+				// printf("Error: %s\n", NFD_GetError());
+			}
+			return std::nullopt;
+		}
+
+		static std::optional<std::string> async_show_choose_path_dialog(std::string loc)
+		{
+			std::string result;
+			nfdchar_t*	nfd_path = nullptr;
+
+			auto nfd_result = NFD_OpenDirectoryDialog(nullptr, loc.data(), &nfd_path);
+
+			if (nfd_result == NFD_OKAY)
+			{
+				result = nfd_path;
+				::free(nfd_path);
+				return result;
+			}
+			else if (nfd_result == NFD_CANCEL)
+			{
+				// nothing
+			}
+			else
+			{
+				// printf("Error: %s\n", NFD_GetError());
+			}
+			return std::nullopt;
+		}
+
+		optional_future<std::string> show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept
+		{
+			return std::async(std::launch::async, async_file_open_dialog, std::string(filter), std::string(origin));
+		}
+
+		optional_future<std::vector<std::string>> show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept
+		{
+			return std::async(std::launch::async, async_file_open_multiple_dialog, std::string(filter), std::string(origin));
+		}
+
+		optional_future<std::string> show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept
+		{
+			return std::async(std::launch::async, async_file_save_dialog, std::string(filter), std::string(origin));
+		}
+
+		optional_future<std::string> show_path_dialog(std::string_view origin, std::string_view filter) noexcept
+		{
+			return std::async(std::launch::async, async_show_choose_path_dialog, std::string(origin));
+		}
+	} // namespace details
+} // namespace imgui_app
+
 namespace imgui_app
 {
 	namespace details
@@ -235,7 +367,7 @@ namespace imgui_app
 		return imgui_app_fw::select_platform(p);
 	}
 
-	void set_window_title(const char* title) 
+	void set_window_title(const char* title)
 	{
 		return imgui_app_fw::set_window_title(title);
 	}

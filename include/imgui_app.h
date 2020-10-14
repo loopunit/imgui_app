@@ -4,6 +4,9 @@
 #include <atomic>
 #include <array>
 
+#include <optional>
+#include <future>
+
 namespace imgui_app
 {
 	template<typename E>
@@ -475,4 +478,85 @@ namespace imgui_app
 	void warning(const char* text) noexcept;
 	void error(const char* text) noexcept;
 	void info(const char* text) noexcept;
+
+	template<typename T>
+	using optional_future = std::future<std::optional<T>>;
+
+	template<typename T>
+	inline bool future_is_ready(T const& f) noexcept
+	{
+		return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+	}
+
+	namespace details
+	{
+		optional_future<std::string>			  show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::vector<std::string>> show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::string>			  show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::string>			  show_path_dialog(std::string_view origin, std::string_view filter) noexcept;
+
+		template<typename T>
+		struct file_dialog_future
+		{
+			bool m_state = false;
+			T	 m_future;
+
+			using value_type = decltype(m_future.get());
+
+			bool is_active() const noexcept
+			{
+				return m_state;
+			}
+
+			bool is_ready() const noexcept
+			{
+				if (m_state)
+				{
+					return future_is_ready(m_future);
+				}
+				return false;
+			}
+
+			value_type acquire_value() noexcept
+			{
+				m_state = false;
+				return m_future.get();
+			}
+
+			std::optional<value_type> get_value() noexcept
+			{
+				if (is_ready())
+				{
+					return acquire_value();
+				}
+				return std::nullopt;
+			}
+		};
+
+	} // namespace details
+
+	using file_open_dialog_future = details::file_dialog_future<decltype(details::show_file_open_dialog(std::string_view(), std::string_view()))>;
+	inline file_open_dialog_future show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept
+	{
+		return {true, details::show_file_open_dialog(origin, filter)};
+	}
+
+	using file_open_multiple_dialog_future = details::file_dialog_future<decltype(details::show_file_open_multiple_dialog(std::string_view(), std::string_view()))>;
+	inline file_open_multiple_dialog_future show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept
+	{
+		return {true, details::show_file_open_multiple_dialog(origin, filter)};
+	}
+
+	using file_save_dialog_future = details::file_dialog_future<decltype(details::show_file_save_dialog(std::string_view(), std::string_view()))>;
+	inline file_save_dialog_future show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept
+	{
+		return {true, details::show_file_save_dialog(origin, filter)};
+	}
+
+	using path_dialog_future = details::file_dialog_future<decltype(details::show_path_dialog(std::string_view(), std::string_view()))>;
+	inline path_dialog_future show_path_dialog(std::string_view origin, std::string_view filter) noexcept
+	{
+		return {true, details::show_path_dialog(origin, filter)};
+	}
+
 } // namespace imgui_app
