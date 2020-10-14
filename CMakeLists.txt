@@ -266,6 +266,22 @@ install(
 ##
 
 CPMAddPackage(
+	NAME scope_guard
+	GITHUB_REPOSITORY ricab/scope_guard
+	GIT_TAG 760de0a9ea0fec980a5244604ffa5b1acff2db7a
+	DOWNLOAD_ONLY true)
+
+if( NOT ${scope_guard_ADDED} )
+	message( FATAL_ERROR "Could not find scope_guard" )
+endif()
+
+install(
+    FILES ${scope_guard_SOURCE_DIR}/scope_guard.hpp
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
 	NAME hedley
 	GITHUB_REPOSITORY nemequ/hedley
 	GIT_TAG 4a59eb6d8e3e73b6c60aed2c92a6590d26df93d8
@@ -608,6 +624,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${gsl_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${units_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${argh_SOURCE_DIR}>
+		   $<BUILD_INTERFACE:${scope_guard_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${hedley_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${rtm_SOURCE_DIR}/includes>
 		   $<BUILD_INTERFACE:${plf_nanotimer_SOURCE_DIR}>
