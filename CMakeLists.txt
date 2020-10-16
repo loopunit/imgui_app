@@ -336,6 +336,34 @@ file(GLOB nfd_source
 ##
 
 CPMAddPackage(
+	NAME boxer
+	GITHUB_REPOSITORY aaronmjacobs/Boxer
+	GIT_TAG 01c17f6a9cd66068f7890ea887ab3b9a673f0434
+	DOWNLOAD_ONLY true)
+
+if( NOT ${boxer_ADDED} )
+	message( FATAL_ERROR "Could not find boxer" )
+endif()
+
+install(
+    DIRECTORY ${boxer_SOURCE_DIR}/src/include/boxer
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+if (APPLE)
+	file(GLOB boxer_source 
+		${boxer_SOURCE_DIR}/src/boxer_osx.mm)
+elseif (WIN32)
+	file(GLOB boxer_source 
+		${boxer_SOURCE_DIR}/src/boxer_win.cpp)
+elseif (LINUX)
+	file(GLOB boxer_source 
+		${boxer_SOURCE_DIR}/src/boxer_linux.cpp)
+endif()
+
+
+##
+
+CPMAddPackage(
 	NAME plf_nanotimer
 	GITHUB_REPOSITORY mattreecebentley/plf_nanotimer
 	GIT_TAG bc8b44d2befc4395f63701c923ece89835d8415c
@@ -602,7 +630,7 @@ install(
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source} ${nfd_source})
+list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source} ${nfd_source} ${boxer_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -636,6 +664,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${fmt_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${nfd_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${nfd_SOURCE_DIR}/src/include>
+		   $<BUILD_INTERFACE:${boxer_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:imgui_app-${PROJECT_VERSION}>
 
 	PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>

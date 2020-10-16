@@ -9,9 +9,70 @@
 #include <atomic_queue/atomic_queue.h>
 
 #include <nfd.h>
+#include <boxer/boxer.h>
 
 namespace imgui_app
 {
+	namespace details
+	{
+		static messagebox_result async_show_messagebox(std::string message, std::string title, messagebox_style style, messagebox_buttons buttons)
+		{
+			auto convert_style = [style]() {
+				switch (style)
+				{
+				case messagebox_style::info:
+					return boxer::Style::Info;
+				case messagebox_style::warning:
+					return boxer::Style::Warning;
+				case messagebox_style::error:
+					return boxer::Style::Error;
+				case messagebox_style::question:
+				default:
+					return boxer::Style::Question;
+				};
+			};
+
+			auto convert_buttons = [buttons]() {
+				switch (buttons)
+				{
+				case messagebox_buttons::ok:
+					return boxer::Buttons::OK;
+				case messagebox_buttons::okcancel:
+					return boxer::Buttons::OKCancel;
+				case messagebox_buttons::yesno:
+					return boxer::Buttons::YesNo;
+				case messagebox_buttons::quit:
+				default:
+					return boxer::Buttons::Quit;
+				};
+			};
+
+			switch (boxer::show(message.c_str(), title.c_str(), convert_style(), convert_buttons()))
+			{
+			case boxer::Selection::OK:
+				return messagebox_result::ok;
+			case boxer::Selection::Cancel:
+				return messagebox_result::cancel;
+			case boxer::Selection::Yes:
+				return messagebox_result::yes;
+			case boxer::Selection::No:
+				return messagebox_result::no;
+			case boxer::Selection::Quit:
+				return messagebox_result::quit;
+			case boxer::Selection::None:
+				return messagebox_result::none;
+			case boxer::Selection::Error:
+			default:
+				return messagebox_result::error;
+			};
+		}
+
+		std::future<messagebox_result> show_messagebox(const char* message, const char* title, messagebox_style style, messagebox_buttons buttons) noexcept
+		{
+			return std::async(std::launch::async, async_show_messagebox, std::string(message), std::string(title), style, buttons);
+		}
+	} // namespace details
+
 	namespace details
 	{
 		// indirect call required to copy the string views

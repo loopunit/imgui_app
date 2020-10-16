@@ -49,8 +49,13 @@ int main(int, char**)
 			[]() { /* Do some TLS initialization here if needed */ }
 		);
 
+
 		if (imgui_app::init())
 		{
+			//imgui_app::file_open_dialog_future open_future = imgui_app::show_file_open_dialog("", "");
+			
+			//imgui_app::messagebox_future mb_future = imgui_app::show_messagebox("message contents", "title", imgui_app::messagebox_style::info, imgui_app::messagebox_buttons::ok);
+			
 			imgui_app::set_window_title("Hello?");
 			
 			imgui_app::info("Welcome to the imgui-console example!");
@@ -88,6 +93,18 @@ int main(int, char**)
 				{
 					ImGui::ShowDemoWindow(&show_demo_window);
 				}
+
+				//if (auto result = open_future.get_value())
+				//{
+				//	auto value = *(*result);
+				//	fprintf(stderr, value.c_str());
+				//}
+				
+				//if (auto result = mb_future.get_value())
+				//{
+				//	auto value = *result;
+				//	fprintf(stderr, "%d", imgui_app::underlying_cast(value));
+				//}
 
 				imgui_app::end_frame(clear_color);
 			}

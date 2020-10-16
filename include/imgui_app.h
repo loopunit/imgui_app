@@ -488,15 +488,37 @@ namespace imgui_app
 		return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 	}
 
+	enum class messagebox_result : int
+	{
+		ok = 0,
+		cancel,
+		yes,
+		no,
+		quit,
+		none,
+		error
+	};
+
+	enum class messagebox_style : int
+	{
+		info = 0,
+		warning,
+		error,
+		question
+	};
+
+	enum class messagebox_buttons : int
+	{
+		ok = 0,
+		okcancel,
+		yesno,
+		quit
+	};
+
 	namespace details
 	{
-		optional_future<std::string>			  show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept;
-		optional_future<std::vector<std::string>> show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept;
-		optional_future<std::string>			  show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept;
-		optional_future<std::string>			  show_path_dialog(std::string_view origin, std::string_view filter) noexcept;
-
 		template<typename T>
-		struct file_dialog_future
+		struct future_helper
 		{
 			bool m_state = false;
 			T	 m_future;
@@ -532,28 +554,46 @@ namespace imgui_app
 				return std::nullopt;
 			}
 		};
+	}
 
+	namespace details
+	{
+		std::future<messagebox_result> show_messagebox(const char* message, const char* title, messagebox_style style, messagebox_buttons buttons) noexcept;
+	}
+
+	using messagebox_future = details::future_helper<decltype(details::show_messagebox("", "", messagebox_style(), messagebox_buttons()))>;
+	inline messagebox_future show_messagebox(const char* message, const char* title, messagebox_style style, messagebox_buttons buttons) noexcept
+	{
+		return {true, details::show_messagebox(message, title, style, buttons)};
+	}
+
+	namespace details
+	{
+		optional_future<std::string>			  show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::vector<std::string>> show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::string>			  show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept;
+		optional_future<std::string>			  show_path_dialog(std::string_view origin, std::string_view filter) noexcept;
 	} // namespace details
 
-	using file_open_dialog_future = details::file_dialog_future<decltype(details::show_file_open_dialog(std::string_view(), std::string_view()))>;
+	using file_open_dialog_future = details::future_helper<decltype(details::show_file_open_dialog(std::string_view(), std::string_view()))>;
 	inline file_open_dialog_future show_file_open_dialog(std::string_view origin, std::string_view filter) noexcept
 	{
 		return {true, details::show_file_open_dialog(origin, filter)};
 	}
 
-	using file_open_multiple_dialog_future = details::file_dialog_future<decltype(details::show_file_open_multiple_dialog(std::string_view(), std::string_view()))>;
+	using file_open_multiple_dialog_future = details::future_helper<decltype(details::show_file_open_multiple_dialog(std::string_view(), std::string_view()))>;
 	inline file_open_multiple_dialog_future show_file_open_multiple_dialog(std::string_view origin, std::string_view filter) noexcept
 	{
 		return {true, details::show_file_open_multiple_dialog(origin, filter)};
 	}
 
-	using file_save_dialog_future = details::file_dialog_future<decltype(details::show_file_save_dialog(std::string_view(), std::string_view()))>;
+	using file_save_dialog_future = details::future_helper<decltype(details::show_file_save_dialog(std::string_view(), std::string_view()))>;
 	inline file_save_dialog_future show_file_save_dialog(std::string_view origin, std::string_view filter) noexcept
 	{
 		return {true, details::show_file_save_dialog(origin, filter)};
 	}
 
-	using path_dialog_future = details::file_dialog_future<decltype(details::show_path_dialog(std::string_view(), std::string_view()))>;
+	using path_dialog_future = details::future_helper<decltype(details::show_path_dialog(std::string_view(), std::string_view()))>;
 	inline path_dialog_future show_path_dialog(std::string_view origin, std::string_view filter) noexcept
 	{
 		return {true, details::show_path_dialog(origin, filter)};
