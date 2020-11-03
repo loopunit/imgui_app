@@ -525,6 +525,7 @@ struct single_document_model : application_model_events
 
 		static inline operation_async_result async_init_empty()
 		{
+			m_filename.clear();
 			return operation_async_result::success;
 		}
 
@@ -544,6 +545,8 @@ struct single_document_model : application_model_events
 		{
 			m_saved_hash   = first_hash;
 			m_pending_hash = first_hash;
+			imgui_app::info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
+			m_filename = std::move(m_pending_filename);
 			return operation_async_result::success;
 		}
 
@@ -558,6 +561,8 @@ struct single_document_model : application_model_events
 		static inline operation_async_result async_save_pending_document()
 		{
 			m_saved_hash = m_pending_hash;
+			imgui_app::info(fmt::format("Saving pending document: {}", m_pending_filename).c_str());
+			m_filename = std::move(m_pending_filename);
 			return operation_async_result::success;
 		}
 
@@ -779,7 +784,7 @@ struct single_document_model : application_model_events
 
 			struct init_needs_filename : application_model_utils::file_save_dlg<T_FAIL, main_state, fsm>
 			{
-				init_needs_filename() : self_impl("save_substate::init") {}
+				init_needs_filename() : self_impl("save_substate::init_needs_filename") {}
 
 				virtual void entry()
 				{
@@ -877,7 +882,7 @@ struct single_document_model : application_model_events
 
 			struct init_save : application_model_utils::file_save_dlg<T_FAIL, main_state, fsm>
 			{
-				init_save() : self_impl("close_substate::init") {}
+				init_save() : self_impl("close_substate::init_save") {}
 
 				virtual void entry()
 				{
@@ -1026,8 +1031,6 @@ struct single_document_model : application_model_events
 
 	using fsm_handle = tinyfsm::FsmList<fsm>;
 };
-
-// using application_model	 = nested_application_model<single_document_model>;
 
 using application_model	 = single_document_model;
 using simple_application = implement_application<application_model>;
