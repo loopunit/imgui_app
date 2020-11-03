@@ -63,9 +63,16 @@ struct document
 
 	void react(app_model_events::update const&) {}
 
-	void react(app_model_events::draw_menu const&) {}
+	void react(app_model_events::draw_menu const&) 
+	{
+	}
 
-	void react(app_model_events::draw_content const&) {}
+	void react(app_model_events::draw_content const&) 
+	{
+        ImGui::Begin("Dear ImGui Style Editor");
+        ImGui::ShowStyleEditor();
+        ImGui::End();
+	}
 };
 
 using application_model	 = app_model<document, document::app_model_events>::single_document_model;

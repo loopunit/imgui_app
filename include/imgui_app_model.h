@@ -495,6 +495,15 @@ struct app_model
 				return operation_async_result::success;
 			}
 
+			static inline operation_async_result async_destroy_document()
+			{
+				if (m_document)
+				{
+					m_document.reset();
+				}
+				return operation_async_result::success;
+			}
+
 			static inline operation_async_result async_create_new_document()
 			{
 				try
@@ -571,7 +580,10 @@ struct app_model
 
 			virtual void react(typename model_events::update const& evt)
 			{
-				m_document->react(evt);
+				if (m_document)
+				{
+					m_document->react(evt);
+				}
 			}
 
 			virtual void react(typename model_events::draw_menu const& evt)
@@ -580,12 +592,18 @@ struct app_model
 				{
 					document_file_menu::draw(document_file_menu::mode::locked);
 				}
-				m_document->react(evt);
+				if (m_document)
+				{
+					m_document->react(evt);
+				}
 			}
 
 			virtual void react(typename model_events::draw_content const& evt)
 			{
-				m_document->react(evt);
+				if (m_document)
+				{
+					m_document->react(evt);
+				}
 			}
 
 			virtual void react(typename model_events::quit const& evt)
@@ -813,7 +831,15 @@ struct app_model
 					}
 				};
 
-				struct init : application_model_utils::messagebox_yes_no<init_save, T_SUCCESS, fsm>
+				struct cleanup_document : application_model_utils::async<T_SUCCESS /*NOTE: Can't realistically fail & not be fatal*/, T_SUCCESS, fsm>
+				{
+					virtual void entry()
+					{
+						set_impl_call(fsm::async_destroy_document);
+					}
+				};
+
+				struct init : application_model_utils::messagebox_yes_no<init_save, cleanup_document, fsm>
 				{
 					virtual void entry()
 					{
@@ -823,12 +849,12 @@ struct app_model
 						}
 						else
 						{
-							transit<T_SUCCESS>();
+							transit<cleanup_document>();
 						}
 					}
 				};
 
-				struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
+				struct main_state : application_model_utils::async<report_error, cleanup_document, fsm>
 				{
 					virtual void entry()
 					{
