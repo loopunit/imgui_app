@@ -554,7 +554,7 @@ namespace imgui_app
 				return std::nullopt;
 			}
 		};
-	}
+	} // namespace details
 
 	namespace details
 	{
@@ -597,6 +597,15 @@ namespace imgui_app
 	inline path_dialog_future show_path_dialog(std::string_view origin, std::string_view filter) noexcept
 	{
 		return {true, details::show_path_dialog(origin, filter)};
+	}
+
+	using timer_future = details::future_helper<std::future<int>>;
+	inline timer_future set_timer_for_msecs(const int msecs)
+	{
+		return {true, std::async(std::launch::async, [msecs]() {
+					std::this_thread::sleep_for(std::chrono::milliseconds(msecs));
+					return 0;
+				})};
 	}
 
 } // namespace imgui_app

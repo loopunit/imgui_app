@@ -314,6 +314,22 @@ install(
 ##
 
 CPMAddPackage(
+	NAME tinyfsm
+	GITHUB_REPOSITORY digint/tinyfsm
+	GIT_TAG 06f27072266d6c34d990f910c4c43fb11240501c
+	DOWNLOAD_ONLY true)
+
+if( NOT ${tinyfsm_ADDED} )
+	message( FATAL_ERROR "Could not find tinyfsm" )
+endif()
+
+install(
+    FILES ${tinyfsm_SOURCE_DIR}/include/tinyfsm.hpp
+    DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+##
+
+CPMAddPackage(
 	NAME nfd
 	GITHUB_REPOSITORY native-toolkit/nfd
 	GIT_TAG e9e3636b031797396aa502b78432ae1347c2afe3
@@ -655,6 +671,7 @@ target_include_directories(imgui_app
 		   $<BUILD_INTERFACE:${scope_guard_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${hedley_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${rtm_SOURCE_DIR}/includes>
+		   $<BUILD_INTERFACE:${tinyfsm_SOURCE_DIR}/include>
 		   $<BUILD_INTERFACE:${plf_nanotimer_SOURCE_DIR}>
 		   $<BUILD_INTERFACE:${optick_SOURCE_DIR}/src>
 		   $<BUILD_INTERFACE:${mustach_SOURCE_DIR}>
