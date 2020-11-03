@@ -490,11 +490,13 @@ struct implement_application : T_MODEL
 
 //
 
-template <typename T_DOCUMENT>
+template<typename T_DOCUMENT>
 struct single_document_model : application_model_events
 {
 	struct fsm : tinyfsm::Fsm<fsm>
 	{
+		static inline std::unique_ptr<T_DOCUMENT> m_document;
+
 		static inline bool m_running = false;
 
 		static inline std::string m_filename;
@@ -530,6 +532,17 @@ struct single_document_model : application_model_events
 		{
 			m_saved_hash   = invalid_hash;
 			m_pending_hash = first_hash;
+			try
+			{
+				m_document = std::make_unique<T_DOCUMENT>();
+			}
+			catch (...)
+			{
+				// TODO: handle error/details
+				m_saved_hash   = invalid_hash;
+				m_pending_hash = invalid_hash;
+				return operation_async_result::fail;
+			}
 			return operation_async_result::success;
 		}
 
@@ -539,22 +552,47 @@ struct single_document_model : application_model_events
 			m_pending_hash = first_hash;
 			imgui_app::info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
 			m_filename = std::move(m_pending_filename);
+			try
+			{
+				m_document = std::make_unique<T_DOCUMENT>(m_filename);
+			}
+			catch (...)
+			{
+				// TODO: handle error/details
+				m_saved_hash   = invalid_hash;
+				m_pending_hash = invalid_hash;
+				return operation_async_result::fail;
+			}
 			return operation_async_result::success;
 		}
 
 		static inline void mark_document_changed()
 		{
-			while (m_pending_hash != invalid_hash)
+			if (m_document && m - document->changed())
 			{
-				++m_pending_hash;
+				while (m_pending_hash != invalid_hash)
+				{
+					++m_pending_hash;
+				}
 			}
 		}
 
 		static inline operation_async_result async_save_pending_document()
 		{
-			m_saved_hash = m_pending_hash;
 			imgui_app::info(fmt::format("Saving pending document: {}", m_pending_filename).c_str());
 			m_filename = std::move(m_pending_filename);
+			try
+			{
+				if (!m_document->save(m_filename))
+				{
+					return operation_async_result::fail;
+				}
+				m_saved_hash = m_pending_hash;
+			}
+			catch (...)
+			{
+				return operation_async_result::fail;
+			}
 			return operation_async_result::success;
 		}
 
@@ -609,7 +647,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 			}
 		};
@@ -618,7 +655,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				set_impl_call(fsm::async_init_empty);
 			}
 		};
@@ -627,18 +663,12 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				set_impl_call(fsm::async_destroy_empty);
 			}
 		};
 
 		struct main_state : fsm
 		{
-			virtual void entry()
-			{
-				fsm::entry();
-			}
-
 			virtual void react(application_model_events::draw_menu const&)
 			{
 				switch (document_file_menu::draw(document_file_menu::mode::empty))
@@ -668,7 +698,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 			}
 		};
@@ -677,7 +706,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				fsm::entry();
 				transit<main_state>();
 			}
 		};
@@ -686,7 +714,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				set_impl_call(fsm::async_create_new_document);
 			}
 		};
@@ -701,7 +728,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 			}
 		};
@@ -710,7 +736,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				impl_show_dialog(fsm::current_filename(), "");
 			}
 		};
@@ -719,7 +744,6 @@ struct single_document_model : application_model_events
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
 				set_impl_call(fsm::async_open_pending_document);
 			}
 		};
@@ -739,7 +763,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 				}
 			};
@@ -748,7 +771,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog(fsm::current_filename(), "");
 				}
 			};
@@ -757,8 +779,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					fsm::entry();
-
 					if (fsm::needs_filename())
 					{
 						transit<init_needs_filename>();
@@ -775,7 +795,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					set_impl_call(fsm::async_save_pending_document);
 				}
 			};
@@ -790,7 +809,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 				}
 			};
@@ -799,7 +817,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog(fsm::current_filename(), "");
 				}
 			};
@@ -808,7 +825,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					set_impl_call(fsm::async_save_pending_document);
 				}
 			};
@@ -823,7 +839,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 				}
 			};
@@ -832,7 +847,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					impl_show_dialog(fsm::current_filename(), "");
 				}
 			};
@@ -841,7 +855,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					if (fsm::needs_to_save())
 					{
 						impl_show_dialog("You have unsaved changes, would you like to save?", "Document has changes", imgui_app::messagebox_style::warning);
@@ -857,7 +870,6 @@ struct single_document_model : application_model_events
 			{
 				virtual void entry()
 				{
-					self_impl::entry();
 					set_impl_call(fsm::async_save_pending_document);
 				}
 			};
@@ -869,27 +881,20 @@ struct single_document_model : application_model_events
 
 			virtual void entry()
 			{
-				self_impl::entry();
 				impl_show_dialog("Error", "An error happened.", imgui_app::messagebox_style::error);
 			}
 		};
 
-		struct init : application_model_utils::async<report_error, main_state, fsm>
+		struct init : fsm
 		{
 			virtual void entry()
 			{
-				self_impl::entry();
-				set_impl_call(fsm::async_init_pending_document);
+				transit<main_state>();
 			}
 		};
 
 		struct main_state : fsm
 		{
-			virtual void entry()
-			{
-				fsm::entry();
-			}
-
 			virtual void react(application_model_events::draw_menu const&)
 			{
 				switch (document_file_menu::draw(document_file_menu::mode::active))
@@ -982,6 +987,12 @@ struct single_document_model : application_model_events
 
 struct document
 {
+	document() {}
+	document(const std::string& path) {}
+	bool save(const std::string& path)
+	{
+		return true;
+	}
 };
 
 using application_model	 = single_document_model<document>;
