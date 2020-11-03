@@ -4,40 +4,11 @@
 #include <tinyfsm.hpp>
 #include <fmt/format.h>
 
-struct app_model_events
-{
-	struct update : tinyfsm::Event
-	{
-	};
-
-	struct draw_menu : tinyfsm::Event
-	{
-		draw_menu mark_file_menu_as_drawn() const
-		{
-			draw_menu mod{*this};
-			mod.m_drew_file_menu = true;
-			return mod;
-		}
-		bool drew_file_menu() const
-		{
-			return m_drew_file_menu;
-		}
-
-		bool m_drew_file_menu;
-	};
-
-	struct draw_content : tinyfsm::Event
-	{
-	};
-
-	struct quit : tinyfsm::Event
-	{
-	};
-};
-
-template<typename T_DOCUMENT>
+template<typename T_DOCUMENT, typename T_MODEL_EVENTS>
 struct app_model
 {
+	using model_events = typename T_MODEL_EVENTS;
+
 	enum operation_async_result
 	{
 		success,
@@ -62,7 +33,7 @@ struct app_model
 				m_operation_future = operation_future{true, std::async(std::launch::async, [func]() { return func(); })};
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -113,7 +84,7 @@ struct app_model
 				transit<T_ON_SUCCESS>();
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -154,7 +125,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_file_open_dialog(origin, filter);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -195,7 +166,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_file_save_dialog(origin, filter);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -236,7 +207,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_messagebox(message, title, style, imgui_app::messagebox_buttons::ok);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -276,7 +247,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_messagebox(message, title, style, imgui_app::messagebox_buttons::quit);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -310,7 +281,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_messagebox(message, title, style, imgui_app::messagebox_buttons::okcancel);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -357,7 +328,7 @@ struct app_model
 				m_dialog_future = imgui_app::show_messagebox(message, title, style, imgui_app::messagebox_buttons::yesno);
 			}
 
-			virtual void react(app_model_events::update const& evt)
+			virtual void react(typename model_events::update const& evt)
 			{
 				T_FSM::react(evt);
 
@@ -492,7 +463,7 @@ struct app_model
 
 	//
 
-	struct single_document_model : app_model_events
+	struct single_document_model : model_events
 	{
 		struct fsm : tinyfsm::Fsm<fsm>
 		{
@@ -598,19 +569,29 @@ struct app_model
 				return m_document && m_document->needs_to_save();
 			}
 
-			virtual void react(app_model_events::update const&) {}
+			virtual void react(typename model_events::update const& evt)
+			{
+				m_document->react(evt);
+			}
 
-			virtual void react(app_model_events::draw_menu const& evt)
+			virtual void react(typename model_events::draw_menu const& evt)
 			{
 				if (!evt.drew_file_menu())
 				{
 					document_file_menu::draw(document_file_menu::mode::locked);
 				}
+				m_document->react(evt);
 			}
 
-			virtual void react(app_model_events::draw_content const&) {}
+			virtual void react(typename model_events::draw_content const& evt)
+			{
+				m_document->react(evt);
+			}
 
-			virtual void react(app_model_events::quit const&) {}
+			virtual void react(typename model_events::quit const& evt)
+			{
+				// TODO
+			}
 
 			virtual void entry() {}
 
@@ -648,7 +629,7 @@ struct app_model
 
 			struct main_state : fsm
 			{
-				virtual void react(app_model_events::draw_menu const& evt)
+				virtual void react(typename model_events::draw_menu const& evt)
 				{
 					switch (document_file_menu::draw(document_file_menu::mode::empty))
 					{
@@ -876,7 +857,7 @@ struct app_model
 
 			struct main_state : fsm
 			{
-				virtual void react(app_model_events::draw_menu const& evt)
+				virtual void react(typename model_events::draw_menu const& evt)
 				{
 					switch (document_file_menu::draw(document_file_menu::mode::active))
 					{

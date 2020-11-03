@@ -2,6 +2,37 @@
 
 struct document
 {
+	struct app_model_events
+	{
+		struct update : tinyfsm::Event
+		{
+		};
+
+		struct draw_menu : tinyfsm::Event
+		{
+			draw_menu mark_file_menu_as_drawn() const
+			{
+				draw_menu mod{*this};
+				mod.m_drew_file_menu = true;
+				return mod;
+			}
+			bool drew_file_menu() const
+			{
+				return m_drew_file_menu;
+			}
+
+			bool m_drew_file_menu;
+		};
+
+		struct draw_content : tinyfsm::Event
+		{
+		};
+
+		struct quit : tinyfsm::Event
+		{
+		};
+	};
+
 	static inline constexpr uint32_t invalid_hash	= 0xffffffff;
 	static inline constexpr uint32_t first_hash		= 0x00000000;
 	uint32_t						 m_saved_hash	= invalid_hash;
@@ -35,11 +66,9 @@ struct document
 	void react(app_model_events::draw_menu const&) {}
 
 	void react(app_model_events::draw_content const&) {}
-
-	void react(app_model_events::quit const&) {}
 };
 
-using application_model	 = app_model<document>::single_document_model;
+using application_model	 = app_model<document, document::app_model_events>::single_document_model;
 using simple_application = implement_application<application_model>;
 FSM_INITIAL_STATE(application_model::fsm, application_model::bootstrap);
 
