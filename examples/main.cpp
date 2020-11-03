@@ -490,15 +490,12 @@ struct implement_application : T_MODEL
 
 //
 
+template <typename T_DOCUMENT>
 struct single_document_model : application_model_events
 {
-	// struct document
-	//{
-	//};
-
 	struct fsm : tinyfsm::Fsm<fsm>
 	{
-		// static inline std::unique_ptr<document> m_document;
+		static inline bool m_running = false;
 
 		static inline std::string m_filename;
 		static inline std::string m_pending_filename;
@@ -508,20 +505,15 @@ struct single_document_model : application_model_events
 		static inline uint32_t			 m_saved_hash	= invalid_hash;
 		static inline uint32_t			 m_pending_hash = invalid_hash;
 
-		// static inline int create_document()
-		//{
-		//	m_document.reset(new document());
-		//}
-		//
-		// static inline bool destroy_document()
-		//{
-		//	m_document.reset();
-		//}
-		//
-		// static inline document* get_document()
-		//{
-		//	return m_document.get();
-		//}
+		static inline operation_async_result async_bootstrap()
+		{
+			return operation_async_result::success;
+		}
+
+		static inline operation_async_result async_shutdown()
+		{
+			return operation_async_result::success;
+		}
 
 		static inline operation_async_result async_init_empty()
 		{
@@ -592,11 +584,6 @@ struct single_document_model : application_model_events
 			return m_saved_hash != m_pending_hash;
 		}
 
-		const std::string m_name;
-		fsm(const char* name) : m_name(name) {}
-
-		static inline bool m_running = false;
-
 		virtual void react(update const&) {}
 
 		virtual void react(draw_menu const&)
@@ -608,10 +595,7 @@ struct single_document_model : application_model_events
 
 		virtual void react(quit const&) {}
 
-		virtual void entry()
-		{
-			imgui_app::info(fmt::format("single_document_model: {}", m_name).c_str());
-		}
+		virtual void entry() {}
 
 		virtual void exit() {}
 	};
@@ -623,8 +607,6 @@ struct single_document_model : application_model_events
 
 		struct report_error : application_model_utils::messagebox_quit<T_SHUTDOWN, fsm>
 		{
-			report_error() : self_impl("empty_substate::report_error") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -634,8 +616,6 @@ struct single_document_model : application_model_events
 
 		struct init : application_model_utils::async<report_error, main_state, fsm>
 		{
-			init() : self_impl("empty_substate::init") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -645,8 +625,6 @@ struct single_document_model : application_model_events
 
 		struct destroy : application_model_utils::async<report_error, T_SHUTDOWN, fsm>
 		{
-			destroy() : self_impl("empty_substate::destroy") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -656,8 +634,6 @@ struct single_document_model : application_model_events
 
 		struct main_state : fsm
 		{
-			main_state() : fsm("empty_substate::main_state") {}
-
 			virtual void entry()
 			{
 				fsm::entry();
@@ -690,8 +666,6 @@ struct single_document_model : application_model_events
 
 		struct report_error : application_model_utils::messagebox_quit<T_EXIT, fsm>
 		{
-			report_error() : self_impl("new_from_empty_substate::report_error") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -701,8 +675,6 @@ struct single_document_model : application_model_events
 
 		struct init : fsm
 		{
-			init() : fsm("new_from_empty_substate::init") {}
-
 			virtual void entry()
 			{
 				fsm::entry();
@@ -712,8 +684,6 @@ struct single_document_model : application_model_events
 
 		struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
 		{
-			main_state() : self_impl("new_from_empty_substate::main_state") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -729,8 +699,6 @@ struct single_document_model : application_model_events
 
 		struct report_error : application_model_utils::messagebox_quit<T_EXIT, fsm>
 		{
-			report_error() : self_impl("open_from_empty_substate::report_error") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -740,8 +708,6 @@ struct single_document_model : application_model_events
 
 		struct init : application_model_utils::file_open_dlg<T_EXIT, main_state, fsm>
 		{
-			init() : self_impl("open_from_empty_substate::init") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -751,8 +717,6 @@ struct single_document_model : application_model_events
 
 		struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
 		{
-			main_state() : self_impl("open_from_empty_substate::main_state") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -773,8 +737,6 @@ struct single_document_model : application_model_events
 
 			struct report_error : application_model_utils::messagebox_quit<T_FAIL, fsm>
 			{
-				report_error() : self_impl("save_substate::report_error") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -784,8 +746,6 @@ struct single_document_model : application_model_events
 
 			struct init_needs_filename : application_model_utils::file_save_dlg<T_FAIL, main_state, fsm>
 			{
-				init_needs_filename() : self_impl("save_substate::init_needs_filename") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -795,8 +755,6 @@ struct single_document_model : application_model_events
 
 			struct init : fsm
 			{
-				init() : fsm("save_substate::init") {}
-
 				virtual void entry()
 				{
 					fsm::entry();
@@ -815,8 +773,6 @@ struct single_document_model : application_model_events
 
 			struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
 			{
-				main_state() : self_impl("save_substate::main_state") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -832,8 +788,6 @@ struct single_document_model : application_model_events
 
 			struct report_error : application_model_utils::messagebox_quit<T_FAIL, fsm>
 			{
-				report_error() : self_impl("save_as_substate::report_error") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -843,8 +797,6 @@ struct single_document_model : application_model_events
 
 			struct init : application_model_utils::file_save_dlg<T_FAIL, main_state, fsm>
 			{
-				init() : self_impl("save_as_substate::init") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -854,8 +806,6 @@ struct single_document_model : application_model_events
 
 			struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
 			{
-				main_state() : self_impl("save_as_substate::main_state") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -871,8 +821,6 @@ struct single_document_model : application_model_events
 
 			struct report_error : application_model_utils::messagebox_quit<T_FAIL, fsm>
 			{
-				report_error() : self_impl("close_substate::report_error") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -882,8 +830,6 @@ struct single_document_model : application_model_events
 
 			struct init_save : application_model_utils::file_save_dlg<T_FAIL, main_state, fsm>
 			{
-				init_save() : self_impl("close_substate::init_save") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -893,8 +839,6 @@ struct single_document_model : application_model_events
 
 			struct init : application_model_utils::messagebox_yes_no<init_save, T_SUCCESS, fsm>
 			{
-				init() : self_impl("close_substate::init") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -911,8 +855,6 @@ struct single_document_model : application_model_events
 
 			struct main_state : application_model_utils::async<report_error, T_SUCCESS, fsm>
 			{
-				main_state() : self_impl("close_substate::main_state") {}
-
 				virtual void entry()
 				{
 					self_impl::entry();
@@ -923,7 +865,7 @@ struct single_document_model : application_model_events
 
 		struct report_error : application_model_utils::messagebox_quit<T_EXIT, fsm>
 		{
-			report_error() : self_impl("ready_substate::report_error") {}
+			report_error() {}
 
 			virtual void entry()
 			{
@@ -934,8 +876,6 @@ struct single_document_model : application_model_events
 
 		struct init : application_model_utils::async<report_error, main_state, fsm>
 		{
-			init() : self_impl("ready_substate::init") {}
-
 			virtual void entry()
 			{
 				self_impl::entry();
@@ -945,8 +885,6 @@ struct single_document_model : application_model_events
 
 		struct main_state : fsm
 		{
-			main_state() : fsm("ready_substate::main_state") {}
-
 			virtual void entry()
 			{
 				fsm::entry();
@@ -1007,21 +945,21 @@ struct single_document_model : application_model_events
 	{
 	};
 
-	struct bootstrap : application_model_utils::countdown<shutdown, substate_empty, fsm>
+	struct bootstrap : application_model_utils::async<shutdown, substate_empty, fsm>
 	{
-		bootstrap() : self_impl("bootstrap") {}
+		bootstrap() {}
 
 		virtual void entry()
 		{
+			set_impl_call(fsm::async_bootstrap);
 			m_running = true;
-			set_impl_timer(1000);
 		}
 	};
 
 	// terminal
-	struct shutdown : fsm
+	struct terminated : fsm
 	{
-		shutdown() : fsm("shutdown") {}
+		terminated() {}
 
 		virtual void entry()
 		{
@@ -1029,10 +967,24 @@ struct single_document_model : application_model_events
 		}
 	};
 
+	struct shutdown : application_model_utils::async<terminated, terminated, fsm>
+	{
+		shutdown() {}
+
+		virtual void entry()
+		{
+			set_impl_call(fsm::async_shutdown);
+		}
+	};
+
 	using fsm_handle = tinyfsm::FsmList<fsm>;
 };
 
-using application_model	 = single_document_model;
+struct document
+{
+};
+
+using application_model	 = single_document_model<document>;
 using simple_application = implement_application<application_model>;
 FSM_INITIAL_STATE(application_model::fsm, application_model::bootstrap);
 
