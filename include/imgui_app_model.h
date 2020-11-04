@@ -4,6 +4,29 @@
 #include <tinyfsm.hpp>
 #include <fmt/format.h>
 
+struct document_file_menu
+{
+	enum class mode
+	{
+		locked,
+		empty,
+		active,
+	};
+
+	enum class result
+	{
+		on_new,
+		on_close,
+		on_open,
+		on_save,
+		on_save_as,
+		on_quit,
+		nothing
+	};
+};
+
+//
+
 template<typename T_DOCUMENT, typename T_MODEL_EVENTS>
 struct app_model
 {
@@ -357,112 +380,6 @@ struct app_model
 
 	//
 
-	struct document_file_menu
-	{
-		enum class mode
-		{
-			locked,
-			empty,
-			active,
-		};
-
-		enum class result
-		{
-			on_new,
-			on_close,
-			on_open,
-			on_save,
-			on_save_as,
-			on_quit,
-			nothing
-		};
-
-		static result draw(mode m)
-		{
-			auto r = result::nothing;
-			if (m == mode::empty)
-			{
-				if (ImGui::BeginMenu("File"))
-				{
-					if (ImGui::MenuItem("New"))
-					{
-						r = result::on_new;
-					}
-
-					ImGui::MenuItem("Close", nullptr, nullptr, false);
-
-					if (ImGui::MenuItem("Open"))
-					{
-						r = result::on_open;
-					}
-
-					ImGui::MenuItem("Save", "Ctrl+S", nullptr, false);
-
-					ImGui::MenuItem("Save As", "Ctrl+Shift+S", nullptr, false);
-
-					if (ImGui::MenuItem("Quit"))
-					{
-						r = result::on_quit;
-					}
-					ImGui::EndMenu();
-				}
-			}
-			else if (m == mode::locked)
-			{
-				if (ImGui::BeginMenu("File", false))
-				{
-					ImGui::MenuItem("New", nullptr, false);
-
-					ImGui::MenuItem("Open", nullptr, false);
-
-					ImGui::MenuItem("Save", "Ctrl S", nullptr, false);
-
-					ImGui::MenuItem("Save As", "Ctrl Shift S", nullptr, false);
-
-					ImGui::EndMenu();
-				}
-			}
-			else
-			{
-				assert(m == mode::active);
-				if (ImGui::BeginMenu("File"))
-				{
-					ImGui::MenuItem("New", nullptr, nullptr, false);
-
-					if (ImGui::MenuItem("Open"))
-					{
-						r = result::on_open;
-					}
-
-					if (ImGui::MenuItem("Close"))
-					{
-						r = result::on_close;
-					}
-
-					if (ImGui::MenuItem("Save", "Ctrl+S"))
-					{
-						r = result::on_save;
-					}
-
-					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S"))
-					{
-						r = result::on_save_as;
-					}
-
-					if (ImGui::MenuItem("Quit"))
-					{
-						r = result::on_quit;
-					}
-					ImGui::EndMenu();
-				}
-			}
-
-			return r;
-		}
-	};
-
-	//
-
 	struct single_document_model : model_events
 	{
 		struct fsm : tinyfsm::Fsm<fsm>
@@ -588,14 +505,7 @@ struct app_model
 
 			virtual void react(typename model_events::draw_menu const& evt)
 			{
-				if (!evt.drew_file_menu())
-				{
-					document_file_menu::draw(document_file_menu::mode::locked);
-				}
-				if (m_document)
-				{
-					m_document->react(evt);
-				}
+				T_DOCUMENT::draw_menu(m_document.get(), document_file_menu::mode::locked);
 			}
 
 			virtual void react(typename model_events::draw_content const& evt)
@@ -649,7 +559,7 @@ struct app_model
 			{
 				virtual void react(typename model_events::draw_menu const& evt)
 				{
-					switch (document_file_menu::draw(document_file_menu::mode::empty))
+					switch (T_DOCUMENT::draw_menu(m_document.get(), document_file_menu::mode::empty))
 					{
 					case document_file_menu::result::on_new:
 						transit<T_ON_NEW>();
@@ -663,8 +573,6 @@ struct app_model
 					default:
 						break;
 					};
-
-					fsm::react(evt.mark_file_menu_as_drawn());
 				}
 			};
 		};
@@ -729,7 +637,7 @@ struct app_model
 			};
 		};
 
-		template<typename T_CLOSE, typename T_EXIT>
+		template<typename T_CLOSE, typename T_EXIT, typename T_NEW, typename T_OPEN>
 		struct ready_substate
 		{
 			struct main_state;
@@ -885,8 +793,14 @@ struct app_model
 			{
 				virtual void react(typename model_events::draw_menu const& evt)
 				{
-					switch (document_file_menu::draw(document_file_menu::mode::active))
+					switch (T_DOCUMENT::draw_menu(m_document.get(), document_file_menu::mode::active))
 					{
+					case document_file_menu::result::on_new:
+						transit<close_substate<T_NEW, main_state>::init>();
+						break;
+					case document_file_menu::result::on_open:
+						transit<close_substate<T_OPEN, main_state>::init>();
+						break;
 					case document_file_menu::result::on_close:
 						transit<close_substate<T_CLOSE, main_state>::init>();
 						break;
@@ -902,8 +816,6 @@ struct app_model
 					default:
 						break;
 					};
-
-					fsm::react(evt.mark_file_menu_as_drawn());
 				}
 			};
 		};
@@ -919,7 +831,7 @@ struct app_model
 		using empty			  = empty_substate<shutdown, substate_new, substate_open>;
 		using new_from_empty  = new_from_empty_substate<substate_empty, substate_ready_from_new>;
 		using open_from_empty = open_from_empty_substate<substate_empty, substate_ready_from_open>;
-		using ready			  = ready_substate<substate_empty, shutdown>;
+		using ready			  = ready_substate<substate_empty, shutdown, substate_new, substate_open>;
 
 		struct substate_empty : empty::init
 		{

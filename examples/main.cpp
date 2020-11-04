@@ -1,6 +1,6 @@
 #include <imgui_app_model.h>
 
-struct document
+struct document : document_file_menu
 {
 	struct app_model_events
 	{
@@ -10,18 +10,6 @@ struct document
 
 		struct draw_menu : tinyfsm::Event
 		{
-			draw_menu mark_file_menu_as_drawn() const
-			{
-				draw_menu mod{*this};
-				mod.m_drew_file_menu = true;
-				return mod;
-			}
-			bool drew_file_menu() const
-			{
-				return m_drew_file_menu;
-			}
-
-			bool m_drew_file_menu;
 		};
 
 		struct draw_content : tinyfsm::Event
@@ -63,15 +51,97 @@ struct document
 
 	void react(app_model_events::update const&) {}
 
-	void react(app_model_events::draw_menu const&) 
+	void react(app_model_events::draw_content const&)
 	{
+		ImGui::Begin("Dear ImGui Style Editor");
+		ImGui::ShowStyleEditor();
+		ImGui::End();
 	}
 
-	void react(app_model_events::draw_content const&) 
+	static result draw_menu(document* self, mode m)
 	{
-        ImGui::Begin("Dear ImGui Style Editor");
-        ImGui::ShowStyleEditor();
-        ImGui::End();
+		auto r = result::nothing;
+		if (m == mode::empty)
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+					r = result::on_new;
+				}
+
+				ImGui::MenuItem("Close", nullptr, nullptr, false);
+
+				if (ImGui::MenuItem("Open"))
+				{
+					r = result::on_open;
+				}
+
+				ImGui::MenuItem("Save", "Ctrl+S", nullptr, false);
+
+				ImGui::MenuItem("Save As", "Ctrl+Shift+S", nullptr, false);
+
+				if (ImGui::MenuItem("Quit"))
+				{
+					r = result::on_quit;
+				}
+				ImGui::EndMenu();
+			}
+		}
+		else if (m == mode::locked)
+		{
+			if (ImGui::BeginMenu("File", false))
+			{
+				ImGui::MenuItem("New", nullptr, false);
+
+				ImGui::MenuItem("Open", nullptr, false);
+
+				ImGui::MenuItem("Save", "Ctrl S", nullptr, false);
+
+				ImGui::MenuItem("Save As", "Ctrl Shift S", nullptr, false);
+
+				ImGui::EndMenu();
+			}
+		}
+		else
+		{
+			assert(m == mode::active);
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+					r = result::on_new;
+				}
+
+				if (ImGui::MenuItem("Open"))
+				{
+					r = result::on_open;
+				}
+
+				if (ImGui::MenuItem("Close"))
+				{
+					r = result::on_close;
+				}
+
+				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				{
+					r = result::on_save;
+				}
+
+				if (ImGui::MenuItem("Save As", "Ctrl+Shift+S"))
+				{
+					r = result::on_save_as;
+				}
+
+				if (ImGui::MenuItem("Quit"))
+				{
+					r = result::on_quit;
+				}
+				ImGui::EndMenu();
+			}
+		}
+
+		return r;
 	}
 };
 
