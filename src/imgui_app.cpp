@@ -2,9 +2,9 @@
 
 #include <imgui_console.h>
 
-#include <reckless/severity_log.hpp>
-#include <reckless/stdout_writer.hpp>
-#include <reckless/crash_handler.hpp>
+//#include <reckless/severity_log.hpp>
+//#include <reckless/stdout_writer.hpp>
+//#include <reckless/crash_handler.hpp>
 
 #include <atomic_queue/atomic_queue.h>
 
@@ -17,6 +17,7 @@ namespace imgui_app
 	{
 		static messagebox_result async_show_messagebox(std::string message, std::string title, messagebox_style style, messagebox_buttons buttons)
 		{
+			return messagebox_result::error;
 			auto convert_style = [style]() {
 				switch (style)
 				{
@@ -31,7 +32,7 @@ namespace imgui_app
 					return boxer::Style::Question;
 				};
 			};
-
+			
 			auto convert_buttons = [buttons]() {
 				switch (buttons)
 				{
@@ -46,7 +47,7 @@ namespace imgui_app
 					return boxer::Buttons::Quit;
 				};
 			};
-
+			
 			switch (boxer::show(message.c_str(), title.c_str(), convert_style(), convert_buttons()))
 			{
 			case boxer::Selection::OK:
@@ -80,7 +81,7 @@ namespace imgui_app
 		{
 			std::string result;
 			char*		nfd_path = nullptr;
-
+			
 			auto nfd_result = NFD_OpenDialog(filter.data(), loc.data(), &nfd_path);
 			if (nfd_result == NFD_OKAY)
 			{
@@ -103,9 +104,9 @@ namespace imgui_app
 		{
 			std::vector<std::string> results;
 			nfdpathset_t			 path_set;
-
+			
 			auto nfd_result = NFD_OpenDialogMultiple(filter.data(), loc.data(), &path_set);
-
+			
 			if (nfd_result == NFD_OKAY)
 			{
 				const auto num_paths = NFD_PathSet_GetCount(&path_set);
@@ -114,9 +115,9 @@ namespace imgui_app
 				{
 					results[i] = NFD_PathSet_GetPath(&path_set, i);
 				}
-
+			
 				NFD_PathSet_Free(&path_set);
-
+			
 				return results;
 			}
 			else if (nfd_result == NFD_CANCEL)
@@ -135,9 +136,9 @@ namespace imgui_app
 		{
 			std::string result;
 			nfdchar_t*	nfd_path = nullptr;
-
+			
 			auto nfd_result = NFD_SaveDialog(filter.data(), loc.data(), &nfd_path);
-
+			
 			if (nfd_result == NFD_OKAY)
 			{
 				result = nfd_path;
@@ -159,9 +160,9 @@ namespace imgui_app
 		{
 			std::string result;
 			nfdchar_t*	nfd_path = nullptr;
-
+			
 			auto nfd_result = NFD_OpenDirectoryDialog(nullptr, loc.data(), &nfd_path);
-
+			
 			if (nfd_result == NFD_OKAY)
 			{
 				result = nfd_path;
@@ -325,33 +326,34 @@ namespace imgui_app
 				std::string	   message;
 				csys::ItemType type;
 			};
-
+			
 			using message_queue = atomic_queue::AtomicQueueB<pending_message*>;
 			message_queue					  _message_queue_free;
 			message_queue					  _message_queue_pending;
 			std::array<pending_message, 1024> _message_pool;
 			ImGuiConsole_custom				  _console;
-
-			reckless::stderr_writer _default_writer;
-			using logger_type = reckless::policy_log<>;
-			logger_type _default_logger;
-
-			static inline constexpr int			   _num_loggers = underlying_cast(csys::ItemType::NONE);
-			std::array<logger_type*, _num_loggers> _writers{nullptr};
-
-			logger() : _message_queue_free{1024}, _message_queue_pending{1024}, _default_logger(&_default_writer)
+			
+			//reckless::stderr_writer _default_writer;
+			//using logger_type = reckless::policy_log<>;
+			//logger_type _default_logger;
+			
+			//static inline constexpr int			   _num_loggers = underlying_cast(csys::ItemType::NONE);
+			//std::array<logger_type*, _num_loggers> _writers{nullptr};
+			
+			logger() : _message_queue_free{1024}, _message_queue_pending{1024}
+				//, _default_logger(&_default_writer)
 			{
 				for (auto& msg : _message_pool)
 				{
 					_message_queue_free.push(&msg);
 				}
-
-				for (auto& w : _writers)
-				{
-					w = &_default_logger;
-				}
+			
+			//	for (auto& w : _writers)
+			//	{
+			//		w = &_default_logger;
+			//	}
 			}
-
+			
 			~logger() {}
 
 			void log_impl(std::string_view text, csys::ItemType type) noexcept
@@ -363,13 +365,13 @@ namespace imgui_app
 					msg->message = text;
 					_message_queue_pending.push(msg);
 				}
-
-				auto& writer = _writers[underlying_cast(type)];
-				if (writer)
-				{
-					std::error_code ec;
-					writer->write(text.data());
-				}
+				
+				//auto& writer = _writers[underlying_cast(type)];
+				//if (writer)
+				//{
+				//	std::error_code ec;
+				//	writer->write(text.data());
+				//}
 			}
 
 			void log(const char* text) noexcept
@@ -405,15 +407,15 @@ namespace imgui_app
 
 			void init()
 			{
-				if (_writers[underlying_cast(csys::ItemType::ERROR)])
-				{
-					reckless::install_crash_handler(_writers[underlying_cast(csys::ItemType::ERROR)]);
-				}
+				//if (_writers[underlying_cast(csys::ItemType::ERROR)])
+				//{
+				//	reckless::install_crash_handler(_writers[underlying_cast(csys::ItemType::ERROR)]);
+				//}
 			}
 
 			void destroy() noexcept
 			{
-				reckless::uninstall_crash_handler();
+				//reckless::uninstall_crash_handler();
 			}
 		};
 	} // namespace details

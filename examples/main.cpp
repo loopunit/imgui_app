@@ -77,9 +77,9 @@ struct document : document_file_menu
 					r = result::on_open;
 				}
 
-				ImGui::MenuItem("Save", "Ctrl+S", nullptr, false);
+				ImGui::MenuItem("Save", "Ctrl S", nullptr, false);
 
-				ImGui::MenuItem("Save As", "Ctrl+Shift+S", nullptr, false);
+				ImGui::MenuItem("Save As", "Ctrl Shift S", nullptr, false);
 
 				if (ImGui::MenuItem("Quit"))
 				{
@@ -123,12 +123,12 @@ struct document : document_file_menu
 					r = result::on_close;
 				}
 
-				if (ImGui::MenuItem("Save", "Ctrl+S"))
+				if (ImGui::MenuItem("Save", "Ctrl S"))
 				{
 					r = result::on_save;
 				}
 
-				if (ImGui::MenuItem("Save As", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save As", "Ctrl Shift S"))
 				{
 					r = result::on_save_as;
 				}
