@@ -17,7 +17,6 @@ namespace imgui_app
 	{
 		static messagebox_result async_show_messagebox(std::string message, std::string title, messagebox_style style, messagebox_buttons buttons)
 		{
-			return messagebox_result::error;
 			auto convert_style = [style]() {
 				switch (style)
 				{
