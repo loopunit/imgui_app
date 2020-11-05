@@ -384,12 +384,13 @@ struct app_model
 	{
 		struct fsm : tinyfsm::Fsm<fsm>
 		{
-			static inline std::unique_ptr<T_DOCUMENT> m_document;
-
 			static inline bool m_running = false;
 
-			static inline std::string m_filename;
-			static inline std::string m_pending_filename;
+			static inline std::unique_ptr<T_DOCUMENT> m_document;
+			static inline std::unique_ptr<T_DOCUMENT> m_pending_document;
+			static inline std::unique_ptr<T_DOCUMENT> m_outgoing_document;
+			static inline std::string				  m_filename;
+			static inline std::string				  m_pending_filename;
 
 			static inline operation_async_result async_bootstrap()
 			{
@@ -412,11 +413,16 @@ struct app_model
 				return operation_async_result::success;
 			}
 
+			static inline void prepare_destroy_document()
+			{
+				m_outgoing_document = std::move(m_document);
+			}
+
 			static inline operation_async_result async_destroy_document()
 			{
-				if (m_document)
+				if (m_outgoing_document)
 				{
-					m_document.reset();
+					m_outgoing_document.reset();
 				}
 				return operation_async_result::success;
 			}
@@ -425,7 +431,7 @@ struct app_model
 			{
 				try
 				{
-					m_document = std::make_unique<T_DOCUMENT>();
+					m_pending_document = std::make_unique<T_DOCUMENT>();
 				}
 				catch (...)
 				{
@@ -438,10 +444,9 @@ struct app_model
 			static inline operation_async_result async_open_pending_document()
 			{
 				imgui_app::info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
-				m_filename = std::move(m_pending_filename);
 				try
 				{
-					m_document = std::make_unique<T_DOCUMENT>(m_filename);
+					m_pending_document = std::make_unique<T_DOCUMENT>(m_filename);
 				}
 				catch (...)
 				{
@@ -497,6 +502,12 @@ struct app_model
 
 			virtual void react(typename model_events::update const& evt)
 			{
+				if (m_pending_document && m_document != m_pending_document)
+				{
+					m_document = std::move(m_pending_document);
+					m_filename = std::move(m_pending_filename);
+				}
+
 				if (m_document)
 				{
 					m_document->react(evt);
@@ -743,6 +754,7 @@ struct app_model
 				{
 					virtual void entry()
 					{
+						fsm::prepare_destroy_document();
 						set_impl_call(fsm::async_destroy_document);
 					}
 				};
