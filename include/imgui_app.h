@@ -7,6 +7,11 @@
 #include <optional>
 #include <future>
 
+#ifndef SPDLOG_FMT_EXTERNAL
+#define SPDLOG_FMT_EXTERNAL 1
+#endif
+#include <spdlog/spdlog.h>
+
 namespace imgui_app
 {
 	template<typename E>
@@ -475,9 +480,9 @@ namespace imgui_app
 	void destroy();
 
 	void log(const char* text) noexcept;
-	void warning(const char* text) noexcept;
-	void error(const char* text) noexcept;
-	void info(const char* text) noexcept;
+	void log_warning(const char* text) noexcept;
+	void log_error(const char* text) noexcept;
+	void log_info(const char* text) noexcept;
 
 	template<typename T>
 	using optional_future = std::future<std::optional<T>>;

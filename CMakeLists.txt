@@ -13,7 +13,7 @@ option(IMGUI_BUILD_APP_GLFW_VULKAN "GLFW Vulkan" OFF)
 option(USING_IMGUI_ADDONS "Use IMGui addons" ON)
 option(USING_STX "Use STX" OFF)
 option(USING_ATOMIC_QUEUE "Use atomic_queue" ON)
-option(USING_RECKLESS "Use reckless" OFF)
+option(USING_SPDLOG "Use spdlog" ON)
 option(USING_NLOHMANN_JSON "Use nlohmann_json" OFF)
 option(USING_CEREAL "Use cereal" OFF)
 option(USING_ENTT "Use entt" OFF)
@@ -109,42 +109,23 @@ endif()
 
 #############
 
-if(USING_RECKLESS)
+if(USING_SPDLOG)
 	CPMAddPackage(
-		NAME reckless
-		GITHUB_REPOSITORY mattiasflodin/reckless
-		GIT_TAG 5ac98bd799a44aef9b89fbfae509b044a4d1032b 
+		NAME spdlog
+		GITHUB_REPOSITORY gabime/spdlog
+		GIT_TAG 18e3f07f7d333d33c0ef8fbea02299dbe5d49f97 
 		DOWNLOAD_ONLY true)
 
-	if( NOT ${reckless_ADDED} )
-		message( FATAL_ERROR "Could not find reckless" )
-	endif()
-
-	file(GLOB reckless_source 
-		${reckless_SOURCE_DIR}/reckless/src/output_buffer.cpp
-		${reckless_SOURCE_DIR}/reckless/src/ntoa.cpp
-		${reckless_SOURCE_DIR}/reckless/src/template_formatter.cpp
-		${reckless_SOURCE_DIR}/reckless/src/writer.cpp
-		${reckless_SOURCE_DIR}/reckless/src/basic_log.cpp
-		${reckless_SOURCE_DIR}/reckless/src/policy_log.cpp
-		${reckless_SOURCE_DIR}/reckless/src/file_writer.cpp
-		${reckless_SOURCE_DIR}/reckless/src/fd_writer.cpp
-		${reckless_SOURCE_DIR}/reckless/src/mpsc_ring_buffer.cpp
-		${reckless_SOURCE_DIR}/reckless/src/platform.cpp
-		${reckless_SOURCE_DIR}/reckless/src/lockless_cv.cpp)
-
-	if(WIN32)
-		file(GLOB reckless_platform_source 
-			${reckless_SOURCE_DIR}/reckless/src/spsc_event_win32.cpp
-			${reckless_SOURCE_DIR}/reckless/src/crash_handler_win32.cpp)
-	else()
-		file(GLOB reckless_platform_source 
-			${reckless_SOURCE_DIR}/reckless/src/crash_handler_unix.cpp)
+	if( NOT ${spdlog_ADDED} )
+		message( FATAL_ERROR "Could not find spdlog" )
 	endif()
 
 	install(
-		DIRECTORY ${reckless_SOURCE_DIR}/reckless/include/reckless
+		DIRECTORY ${spdlog_SOURCE_DIR}/include/spdlog
 		DESTINATION include/imgui_app-${PROJECT_VERSION})
+
+	file(GLOB spdlog_source 
+		${spdlog_SOURCE_DIR}/src/*.cpp)
 endif()
 
 #############
@@ -719,7 +700,7 @@ endif()
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.*)
 
-list(APPEND sources ${reckless_source} ${reckless_platform_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source} ${nfd_source} ${boxer_source})
+list(APPEND sources ${spdlog_source} ${cwalk_source} ${fmt_source} ${stx_source} ${optick_source} ${mustach_source} ${uv_source} ${uv_platform_source} ${leveldb_source} ${leveldb_platform_source} ${nfd_source} ${boxer_source})
 
 add_library(imgui_app STATIC ${sources})
 
@@ -745,8 +726,8 @@ if(USING_ATOMIC_QUEUE)
 	list(APPEND public_include_paths $<BUILD_INTERFACE:${atomic_queue_SOURCE_DIR}/include>)
 endif()
 
-if(USING_RECKLESS)
-	list(APPEND public_include_paths $<BUILD_INTERFACE:${reckless_SOURCE_DIR}/reckless/include>)
+if(USING_SPDLOG)
+	list(APPEND public_include_paths $<BUILD_INTERFACE:${spdlog_SOURCE_DIR}/include>)
 endif()
 
 if(USING_NLOHMANN_JSON)

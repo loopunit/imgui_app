@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui_app.h>
+
 #include <tinyfsm.hpp>
 #include <fmt/format.h>
 
@@ -443,7 +444,7 @@ struct app_model
 
 			static inline operation_async_result async_open_pending_document()
 			{
-				imgui_app::info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
+				imgui_app::log_info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
 				try
 				{
 					m_pending_document = std::make_unique<T_DOCUMENT>(m_filename);
@@ -458,7 +459,7 @@ struct app_model
 
 			static inline operation_async_result async_save_pending_document()
 			{
-				imgui_app::info(fmt::format("Saving pending document: {}", m_pending_filename).c_str());
+				imgui_app::log_info(fmt::format("Saving pending document: {}", m_pending_filename).c_str());
 				m_filename = std::move(m_pending_filename);
 				try
 				{
@@ -487,7 +488,7 @@ struct app_model
 			static inline void emplace_pending_filename(std::string&& str)
 			{
 				m_pending_filename = std::move(str);
-				imgui_app::info(fmt::format("Pending document is: {}", m_pending_filename).c_str());
+				imgui_app::log_info(fmt::format("Pending document is: {}", m_pending_filename).c_str());
 			}
 
 			static inline bool needs_filename()

@@ -1,10 +1,7 @@
 #include "imgui_app_internal.h"
+#include "imgui_app_logger.h"
 
 #include <imgui_console.h>
-
-//#include <reckless/severity_log.hpp>
-//#include <reckless/stdout_writer.hpp>
-//#include <reckless/crash_handler.hpp>
 
 #include <atomic_queue/atomic_queue.h>
 
@@ -31,7 +28,7 @@ namespace imgui_app
 					return boxer::Style::Question;
 				};
 			};
-			
+
 			auto convert_buttons = [buttons]() {
 				switch (buttons)
 				{
@@ -46,7 +43,7 @@ namespace imgui_app
 					return boxer::Buttons::Quit;
 				};
 			};
-			
+
 			switch (boxer::show(message.c_str(), title.c_str(), convert_style(), convert_buttons()))
 			{
 			case boxer::Selection::OK:
@@ -80,7 +77,7 @@ namespace imgui_app
 		{
 			std::string result;
 			char*		nfd_path = nullptr;
-			
+
 			auto nfd_result = NFD_OpenDialog(filter.data(), loc.data(), &nfd_path);
 			if (nfd_result == NFD_OKAY)
 			{
@@ -103,9 +100,9 @@ namespace imgui_app
 		{
 			std::vector<std::string> results;
 			nfdpathset_t			 path_set;
-			
+
 			auto nfd_result = NFD_OpenDialogMultiple(filter.data(), loc.data(), &path_set);
-			
+
 			if (nfd_result == NFD_OKAY)
 			{
 				const auto num_paths = NFD_PathSet_GetCount(&path_set);
@@ -114,9 +111,9 @@ namespace imgui_app
 				{
 					results[i] = NFD_PathSet_GetPath(&path_set, i);
 				}
-			
+
 				NFD_PathSet_Free(&path_set);
-			
+
 				return results;
 			}
 			else if (nfd_result == NFD_CANCEL)
@@ -135,9 +132,9 @@ namespace imgui_app
 		{
 			std::string result;
 			nfdchar_t*	nfd_path = nullptr;
-			
+
 			auto nfd_result = NFD_SaveDialog(filter.data(), loc.data(), &nfd_path);
-			
+
 			if (nfd_result == NFD_OKAY)
 			{
 				result = nfd_path;
@@ -159,9 +156,9 @@ namespace imgui_app
 		{
 			std::string result;
 			nfdchar_t*	nfd_path = nullptr;
-			
+
 			auto nfd_result = NFD_OpenDirectoryDialog(nullptr, loc.data(), &nfd_path);
-			
+
 			if (nfd_result == NFD_OKAY)
 			{
 				result = nfd_path;
@@ -325,34 +322,23 @@ namespace imgui_app
 				std::string	   message;
 				csys::ItemType type;
 			};
-			
+
 			using message_queue = atomic_queue::AtomicQueueB<pending_message*>;
 			message_queue					  _message_queue_free;
 			message_queue					  _message_queue_pending;
 			std::array<pending_message, 1024> _message_pool;
 			ImGuiConsole_custom				  _console;
-			
-			//reckless::stderr_writer _default_writer;
-			//using logger_type = reckless::policy_log<>;
-			//logger_type _default_logger;
-			
-			//static inline constexpr int			   _num_loggers = underlying_cast(csys::ItemType::NONE);
-			//std::array<logger_type*, _num_loggers> _writers{nullptr};
-			
+
+			std::shared_ptr<spdlog::logger> _spdlog_console = create_console_logger();
+
 			logger() : _message_queue_free{1024}, _message_queue_pending{1024}
-				//, _default_logger(&_default_writer)
 			{
 				for (auto& msg : _message_pool)
 				{
 					_message_queue_free.push(&msg);
 				}
-			
-			//	for (auto& w : _writers)
-			//	{
-			//		w = &_default_logger;
-			//	}
 			}
-			
+
 			~logger() {}
 
 			void log_impl(std::string_view text, csys::ItemType type) noexcept
@@ -364,13 +350,21 @@ namespace imgui_app
 					msg->message = text;
 					_message_queue_pending.push(msg);
 				}
-				
-				//auto& writer = _writers[underlying_cast(type)];
-				//if (writer)
-				//{
-				//	std::error_code ec;
-				//	writer->write(text.data());
-				//}
+
+				switch (type)
+				{
+				case csys::ItemType::LOG:
+					break;
+				case csys::ItemType::INFO:
+					_spdlog_console->log(spdlog::level::info, text);
+					break;
+				case csys::ItemType::WARNING:
+					_spdlog_console->log(spdlog::level::warn, text);
+					break;
+				case csys::ItemType::ERROR:
+					_spdlog_console->log(spdlog::level::err, text);
+					break;
+				}
 			}
 
 			void log(const char* text) noexcept
@@ -378,17 +372,17 @@ namespace imgui_app
 				log_impl(text, csys::ItemType::LOG);
 			}
 
-			void warning(const char* text) noexcept
+			void log_warning(const char* text) noexcept
 			{
 				log_impl(text, csys::ItemType::WARNING);
 			}
 
-			void error(const char* text) noexcept
+			void log_error(const char* text) noexcept
 			{
 				log_impl(text, csys::ItemType::ERROR);
 			}
 
-			void info(const char* text) noexcept
+			void log_info(const char* text) noexcept
 			{
 				log_impl(text, csys::ItemType::INFO);
 			}
@@ -404,18 +398,9 @@ namespace imgui_app
 				_console.Draw();
 			}
 
-			void init()
-			{
-				//if (_writers[underlying_cast(csys::ItemType::ERROR)])
-				//{
-				//	reckless::install_crash_handler(_writers[underlying_cast(csys::ItemType::ERROR)]);
-				//}
-			}
+			void init() {}
 
-			void destroy() noexcept
-			{
-				//reckless::uninstall_crash_handler();
-			}
+			void destroy() noexcept {}
 		};
 	} // namespace details
 } // namespace imgui_app
@@ -471,19 +456,19 @@ namespace imgui_app
 		logger()->log(text);
 	}
 
-	void warning(const char* text) noexcept
+	void log_warning(const char* text) noexcept
 	{
-		logger()->warning(text);
+		logger()->log_warning(text);
 	}
 
-	void error(const char* text) noexcept
+	void log_error(const char* text) noexcept
 	{
-		logger()->error(text);
+		logger()->log_error(text);
 	}
 
-	void info(const char* text) noexcept
+	void log_info(const char* text) noexcept
 	{
-		logger()->info(text);
+		logger()->log_info(text);
 	}
 
 } // namespace imgui_app
