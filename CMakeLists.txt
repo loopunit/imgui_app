@@ -406,7 +406,7 @@ if(USING_BOXER)
 	endif()
 
 	install(
-		DIRECTORY ${boxer_SOURCE_DIR}/src/include/boxer
+		DIRECTORY ${boxer_SOURCE_DIR}/include/boxer
 		DESTINATION include/imgui_app-${PROJECT_VERSION})
 
 	if(APPLE)
