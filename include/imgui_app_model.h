@@ -447,7 +447,7 @@ struct app_model
 				imgui_app::log_info(fmt::format("Opening pending document: {}", m_pending_filename).c_str());
 				try
 				{
-					m_pending_document = std::make_unique<T_DOCUMENT>(m_filename);
+					m_pending_document = std::make_unique<T_DOCUMENT>(m_pending_filename);
 				}
 				catch (...)
 				{
